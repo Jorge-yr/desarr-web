@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 export default function Hero() {
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#0F172A] font-sans text-[#F8FAFC]">
@@ -21,9 +23,15 @@ export default function Hero() {
 
       <nav className="sticky top-0 z-50 border-b border-white/5 bg-[#0F172A]/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-          <a href="/" className="text-lg font-bold tracking-tight sm:text-xl">
-            <span className="text-[#1D4ED8]">Desarr</span>{" "}
-            <span className="text-[#10B981]">Soluciones</span>
+          <a href="/" className="flex items-center">
+            <Image
+              src="/logo-desarr.png"
+              alt="Desarr Soluciones"
+              width={1024}
+              height={1024}
+              className="h-13 w-auto sm:h-11"
+              priority
+            />
           </a>
 
           <div className="flex items-center gap-2 sm:gap-4">
