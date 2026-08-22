@@ -28,6 +28,7 @@ interface LeadForm {
   country: string;
   state: string;
   companyTypes: CompanyType[];
+  otherCompanyType: string;
 }
 
 interface ShuffledQuestion extends Question {
@@ -370,6 +371,7 @@ const EMPTY_LEAD: LeadForm = {
   country: "",
   state: "",
   companyTypes: [],
+  otherCompanyType: "",
 };
 
 export default function DET() {
@@ -438,12 +440,18 @@ export default function DET() {
   };
 
   const toggleCompanyType = (type: CompanyType) => {
-    setLead((prev) => ({
-      ...prev,
-      companyTypes: prev.companyTypes.includes(type)
-        ? prev.companyTypes.filter((item) => item !== type)
-        : [...prev.companyTypes, type],
-    }));
+    setLead((prev) => {
+      const isRemoving = prev.companyTypes.includes(type);
+
+      return {
+        ...prev,
+        companyTypes: isRemoving
+          ? prev.companyTypes.filter((item) => item !== type)
+          : [...prev.companyTypes, type],
+        otherCompanyType:
+          type === "Otros" && isRemoving ? "" : prev.otherCompanyType,
+      };
+    });
   };
 
   const detectLocation = () => {
@@ -900,6 +908,26 @@ export default function DET() {
                           );
                         })}
                       </div>
+                      {lead.companyTypes.includes("Otros") && (
+                        <label className="mt-3 block">
+                          <span className="mb-1.5 block text-sm text-slate-300">
+                            Especifica el tipo de empresa
+                          </span>
+                          <input
+                            required
+                            type="text"
+                            value={lead.otherCompanyType}
+                            onChange={(e) =>
+                              setLead((prev) => ({
+                                ...prev,
+                                otherCompanyType: e.target.value,
+                              }))
+                            }
+                            className={FORM_INPUT_CLASS}
+                            placeholder="Describe tu rubro o actividad"
+                          />
+                        </label>
+                      )}
                     </fieldset>
                   </div>
 

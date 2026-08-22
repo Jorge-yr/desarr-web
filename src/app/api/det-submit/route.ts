@@ -15,6 +15,7 @@ interface DETLead {
   country: string;
   state: string;
   companyTypes: string[];
+  otherCompanyType?: string;
 }
 
 interface DETPayload {

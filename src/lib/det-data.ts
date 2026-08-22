@@ -57,6 +57,8 @@ export const COMPANY_TYPES = [
   "Comercial de Servicios",
   "Manufacturera",
   "Extractiva",
+  "Industrial",
+  "Otros",
 ] as const;
 
 export type CompanyType = (typeof COMPANY_TYPES)[number];
