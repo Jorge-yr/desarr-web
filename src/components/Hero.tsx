@@ -29,7 +29,7 @@ export default function Hero() {
               alt="Desarr Soluciones"
               width={1024}
               height={1024}
-              className="h-13 w-auto sm:h-11"
+              className="h-26 w-auto sm:h-26"
               priority
             />
           </a>
