@@ -1,5 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
+import AnimatedLogo from "@/components/AnimatedLogo";
 
 export default function Hero() {
   return (
@@ -17,20 +17,10 @@ export default function Hero() {
           {/* Izquierda: Branding */}
           <Link
             href="/"
-            className="flex items-center gap-3 transition-opacity hover:opacity-80"
+            className="transition-opacity hover:opacity-80"
+            aria-label="Desarr Soluciones"
           >
-            <Image
-              src="/logo.png"
-              alt="Desarr Soluciones"
-              width={40}
-              height={40}
-              className="object-contain"
-              priority
-            />
-            <span className="text-xl font-bold tracking-tight">
-              <span className="text-[#1D4ED8]">Desarr</span>{" "}
-              <span className="text-[#10B981]">Soluciones</span>
-            </span>
+            <AnimatedLogo />
           </Link>
 
           {/* Centro: Enlaces Desktop */}
@@ -104,7 +94,7 @@ export default function Hero() {
             href="/auditoria-tecnologica"
             className="flex w-full items-center justify-center rounded-lg bg-[#1D4ED8] px-8 py-4 text-base font-semibold text-white shadow-[0_0_20px_rgba(29,78,216,0.3)] transition-all duration-300 hover:bg-blue-600 hover:shadow-[0_0_30px_rgba(29,78,216,0.5)] sm:w-auto sm:text-lg"
           >
-            Realizar Auditoría Tecnológica
+            Realizar tu Diagnostico de Madurez Tecnológica
           </Link>
           <Link
             href="/casos-de-uso"
