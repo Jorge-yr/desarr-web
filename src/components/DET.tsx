@@ -492,7 +492,7 @@ export default function DET() {
           setLead((prev) => ({ ...prev, country, state }));
           setLocationMessage("Ubicación detectada correctamente.");
         } catch {
-          setLocationMessage("No pudimos detectar tu ubicación. Complétala manualmente.");
+          setLocationMessage("No pudimos detectar tu ubicación. Completala manualmente.");
         } finally {
           setLocationLoading(false);
         }
@@ -562,13 +562,13 @@ export default function DET() {
     <section className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6 lg:px-8">
       <div className="mb-8 text-center">
         <p className="text-sm font-medium uppercase tracking-wider text-[#10B981]">
-          Diagnóstico de Estado Tecnológico
+          Diagnóstico de Madurez Tecnológica
         </p>
         <h2 className="mt-2 text-2xl font-bold text-[#F8FAFC] sm:text-3xl">
-          Evalúa la madurez digital de tu operación
+          Conocé el nivel de madurez tecnológica de tu empresa
         </h2>
         <p className="mt-3 text-sm text-slate-400 sm:text-base">
-          7 preguntas · 3 minutos · Resultado personalizado con recomendaciones
+          7 preguntas · 3 minutos · Diagnóstico personalizado + recomendaciones
         </p>
       </div>
 
@@ -596,7 +596,7 @@ export default function DET() {
                   {shuffledQuestions[currentStep].title}
                 </h3>
                 <p className="mt-2 text-sm text-slate-400">
-                  Selecciona la opción que mejor describe tu situación actual.
+                  Seleccioná la opción que mejor describe la situación actual de tu empresa.
                 </p>
 
                 <div className="mt-6 grid gap-3">
@@ -654,10 +654,10 @@ export default function DET() {
                 </div>
 
                 <h3 className="text-xl font-bold text-[#F8FAFC] sm:text-2xl">
-                  ¡Su Solicitud le será Enviada por email!
+                  ¡Tu diagnóstico está listo!
                 </h3>
                 <p className="mt-2 text-sm text-slate-400 sm:text-base">
-                  Presione Aceptar
+                  Recibirás una copia por email con tu nivel de madurez tecnológica y las recomendaciones asociadas.
                 </p>
 
                 <label className="mx-auto mt-8 flex max-w-md cursor-pointer items-start gap-3 rounded-xl border border-[#1E293B] bg-slate-900/40 px-4 py-4 text-left">
@@ -686,8 +686,8 @@ export default function DET() {
                     </span>
                   </span>
                   <span className="text-xs leading-relaxed text-slate-400 sm:text-sm">
-                    Quiero que me contacte un asesor especializado, para mayor
-                    información.
+                    Quiero que un asesor especializado de Desarr Soluciones se
+                    contacte conmigo para brindarme más información.
                   </span>
                 </label>
 
@@ -712,7 +712,7 @@ export default function DET() {
                   </div>
 
                   <h3 className="mt-4 text-xl font-bold text-[#F8FAFC] sm:text-2xl">
-                    Tu diagnóstico tecnológico
+                    Tu Diagnóstico de Madurez Tecnológica
                   </h3>
                   <p className="mt-3 text-sm leading-relaxed text-slate-300 sm:text-base">
                     {maturity.diagnosis}
@@ -739,11 +739,11 @@ export default function DET() {
                 <form onSubmit={handleSubmit} className="mt-8 space-y-5">
                   <div>
                     <h4 className="text-lg font-semibold text-[#F8FAFC]">
-                      Solicita tu devolución estratégica
+                      Recibí tu devolución estratégica
                     </h4>
                     <p className="mt-1 text-sm text-slate-400">
-                      Completa tus datos y un consultor de Desarr Soluciones revisará
-                      tu diagnóstico.
+                      Completá tus datos y analizaremos tu diagnóstico para brindarte
+                      una devolución estratégica adecuada.
                     </p>
                   </div>
 
@@ -864,7 +864,7 @@ export default function DET() {
 
                     <fieldset className="sm:col-span-2">
                       <legend className="mb-3 text-sm font-medium text-slate-300">
-                        Selecciona el Tipo de Empresa
+                        Seleccioná el Tipo de Empresa
                       </legend>
                       <div className="grid gap-2 sm:grid-cols-2">
                         {COMPANY_TYPES.map((type) => {
@@ -911,7 +911,7 @@ export default function DET() {
                       {lead.companyTypes.includes("Otros") && (
                         <label className="mt-3 block">
                           <span className="mb-1.5 block text-sm text-slate-300">
-                            Especifica el tipo de empresa
+                            Especificá el tipo de empresa
                           </span>
                           <input
                             required
@@ -938,12 +938,12 @@ export default function DET() {
                   >
                     {submitState === "loading"
                       ? "Enviando solicitud..."
-                      : "Recibir una Copia de mi Diagnóstico"}
+                      : "Recibir mi Diagnóstico y Recomendaciones"}
                   </button>
 
                   {submitState === "error" && (
                     <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-                      Hubo un error al enviar. Por favor, intenta nuevamente.
+                      Hubo un error al enviar. Por favor, intentá nuevamente.
                     </p>
                   )}
                 </form>
