@@ -56,25 +56,44 @@ export async function POST(request: Request) {
     if (!isValidPayload(body)) {
       return NextResponse.json(
         { success: false, error: "Payload inválido." },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
-    // Punto de extensión: persistir en CRM, email o base de datos.
-    console.info("[DET Submit]", {
-      score: body.score,
-      maturityLevel: body.maturityLevel,
-      lead: body.lead,
-      answers: body.answers,
-      wantsAdvisorContact: body.wantsAdvisorContact ?? null,
-      confirmed: body.confirmed ?? false,
+    const webhookUrl = process.env.MAKE_WEBHOOK_URL;
+
+    // Validación de la variable de entorno
+    if (!webhookUrl) {
+      console.error("[DET Submit Error] MAKE_WEBHOOK_URL no está definida.");
+      return NextResponse.json(
+        { success: false, error: "Servicio de recepción no configurado en el servidor." },
+        { status: 500 }
+      );
+    }
+
+    // Envío del payload hacia el webhook de Make
+    const response = await fetch(webhookUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
     });
 
+    if (!response.ok) {
+      console.error(`[DET Submit Error] Make respondió con status: ${response.status}`);
+      return NextResponse.json(
+        { success: false, error: "Error al registrar en webhook." },
+        { status: 502 }
+      );
+    }
+
     return NextResponse.json({ success: true });
-  } catch {
+  } catch (error) {
+    console.error("[DET Submit Exception]", error);
     return NextResponse.json(
       { success: false, error: "Error al procesar la solicitud." },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
