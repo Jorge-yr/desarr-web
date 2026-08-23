@@ -70,17 +70,21 @@ export async function POST(request: Request) {
       );
     }
 
-    // Buscamos cada respuesta por su ID fijo (1 al 7) para aplanar el objeto
+    // Extracción de cada respuesta por su ID fijo (1 al 7)
     const getAnswer = (id: number) =>
       body.answers.find((a) => a.questionId === id)?.selectedLabel || "";
 
-    const flattenedPayload = {
+    // Evaluación del checkbox final
+    const solicitaAsesor = body.wantsAdvisorContact ? "SÍ" : "NO";
+
+    const structuredPayload = {
       timestamp: new Date().toISOString(),
       lead: body.lead,
       diagnostic: {
         totalScore: body.score,
         maturityLevel: body.maturityLevel,
       },
+      solicitaAsesor: solicitaAsesor,
       answersFlat: {
         q1_registros: getAnswer(1),
         q2_centralizacion: getAnswer(2),
@@ -93,13 +97,13 @@ export async function POST(request: Request) {
       answersRaw: body.answers,
     };
 
-    // Envío del payload estructurado a Make
+    // Envío hacia el webhook de Make
     const response = await fetch(webhookUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(flattenedPayload),
+      body: JSON.stringify(structuredPayload),
     });
 
     if (!response.ok) {
