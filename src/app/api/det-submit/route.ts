@@ -62,7 +62,6 @@ export async function POST(request: Request) {
 
     const webhookUrl = process.env.MAKE_WEBHOOK_URL;
 
-    // Validación de la variable de entorno
     if (!webhookUrl) {
       console.error("[DET Submit Error] MAKE_WEBHOOK_URL no está definida.");
       return NextResponse.json(
@@ -71,13 +70,36 @@ export async function POST(request: Request) {
       );
     }
 
-    // Envío del payload hacia el webhook de Make
+    // Buscamos cada respuesta por su ID fijo (1 al 7) para aplanar el objeto
+    const getAnswer = (id: number) =>
+      body.answers.find((a) => a.questionId === id)?.selectedLabel || "";
+
+    const flattenedPayload = {
+      timestamp: new Date().toISOString(),
+      lead: body.lead,
+      diagnostic: {
+        totalScore: body.score,
+        maturityLevel: body.maturityLevel,
+      },
+      answersFlat: {
+        q1_registros: getAnswer(1),
+        q2_centralizacion: getAnswer(2),
+        q3_automatizacion: getAnswer(3),
+        q4_clientes: getAnswer(4),
+        q5_reportes: getAnswer(5),
+        q6_integracion: getAnswer(6),
+        q7_escalamiento: getAnswer(7),
+      },
+      answersRaw: body.answers,
+    };
+
+    // Envío del payload estructurado a Make
     const response = await fetch(webhookUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify(flattenedPayload),
     });
 
     if (!response.ok) {
