@@ -1,27 +1,41 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import AnimatedLogo from "@/components/AnimatedLogo";
 
 export default function Hero() {
+  const [menuOpen, setMenuOpen] = useState(false);
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#0F172A] font-sans text-[#F8FAFC] selection:bg-[#1D4ED8] selection:text-white">
       {/* Gradiente Radial Sutil (Lienzo Mate Profundo) */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-900/50 via-[#0F172A] to-[#0F172A]"
-      />
+      <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-900/50 via-[#0F172A] to-[#0F172A]" />
 
       {/* Navegación Superior (Sticky + Backdrop Blur) */}
       <nav className="sticky top-0 z-50 border-b border-white/5 bg-[#0F172A]/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
           
-          {/* Izquierda: Branding */}
-          <Link
-            href="/"
-            className="transition-opacity hover:opacity-80"
-            aria-label="Desarr Soluciones"
-          >
-            <AnimatedLogo />
-          </Link>
+          {/* Izquierda: Hamburguesa (mobile) + Branding */}
+          <div className="flex items-center gap-3">
+            <button type="button" onClick={() => setMenuOpen((v) => !v)} aria-label="Abrir menú" aria-expanded={menuOpen} className="flex h-9 w-9 items-center justify-center rounded-md text-slate-300 transition-colors hover:text-white md:hidden">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="h-6 w-6">
+                {menuOpen ? (
+                  <path d="M6 6l12 12M18 6L6 18" />
+                ) : (
+                  <path d="M4 6h16M4 12h16M4 18h16" />
+                )}
+              </svg>
+            </button>
+
+            <Link
+              href="/"
+              className="transition-opacity hover:opacity-80"
+              aria-label="Desarr Soluciones"
+            >
+              <AnimatedLogo />
+            </Link>
+          </div>
 
           {/* Centro: Enlaces Desktop */}
           <div className="hidden md:flex items-center gap-8">
@@ -36,12 +50,6 @@ export default function Hero() {
               className="text-sm font-medium text-slate-300 transition-colors hover:text-slate-200"
             >
               Casos de Éxito
-            </Link>
-            <Link
-              href="#auditoria"
-              className="text-sm font-medium text-slate-300 transition-colors hover:text-slate-200"
-            >
-              Auditoría
             </Link>
             <Link
               href="/equipo"
@@ -76,6 +84,23 @@ export default function Hero() {
             </Link>
           </div>
         </div>
+
+        {/* Menú Mobile Desplegable */}
+        {menuOpen && (
+          <div className="border-t border-white/5 bg-[#0F172A]/95 backdrop-blur-md md:hidden">
+            <div className="flex flex-col gap-1 px-4 py-3">
+              <Link href="#servicios" onClick={() => setMenuOpen(false)} className="rounded-md px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-white/5 hover:text-white">
+                Servicios
+              </Link>
+              <Link href="#casos-de-exito" onClick={() => setMenuOpen(false)} className="rounded-md px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-white/5 hover:text-white">
+                Casos de Éxito
+              </Link>
+              <Link href="/equipo" onClick={() => setMenuOpen(false)} className="rounded-md px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-white/5 hover:text-white">
+                Equipo
+              </Link>
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* Hero Section (Layout Centrado) */}
