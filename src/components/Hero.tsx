@@ -43,6 +43,12 @@ export default function Hero() {
             >
               Auditoría
             </Link>
+            <Link
+              href="/equipo"
+              className="text-sm font-medium text-slate-300 transition-colors hover:text-slate-200"
+            >
+              Equipo
+            </Link>
           </div>
 
           {/* Derecha: Acciones B2B */}
