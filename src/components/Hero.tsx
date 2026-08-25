@@ -65,13 +65,15 @@ export default function Hero() {
             >
               Regístrate
             </Link>
-            <Link
-              href="/agendar"
+            
+              href="https://wa.me/5493794001206?text=Hola!%20Me%20gustar%C3%ADa%20agendar%20una%20llamada%20con%20Desarr%20Soluciones."
+              target="_blank"
+              rel="noopener noreferrer"
               className="whitespace-nowrap rounded-lg bg-[#1D4ED8] px-3 py-2 text-xs font-medium text-white shadow-sm transition-colors hover:bg-blue-600 sm:px-5 sm:text-sm"
             >
               <span className="sm:hidden">Agendar</span>
               <span className="hidden sm:inline">Agendar Llamada</span>
-            </Link>
+            </a>
           </div>
         </div>
       </nav>
