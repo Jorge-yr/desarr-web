@@ -65,7 +65,7 @@ export default function Hero() {
             >
               Regístrate
             </Link>
-            
+            <Link
               href="https://wa.me/5493794001206?text=Hola!%20Me%20gustar%C3%ADa%20agendar%20una%20llamada%20con%20Desarr%20Soluciones."
               target="_blank"
               rel="noopener noreferrer"
@@ -73,7 +73,7 @@ export default function Hero() {
             >
               <span className="sm:hidden">Agendar</span>
               <span className="hidden sm:inline">Agendar Llamada</span>
-            </a>
+            </Link>
           </div>
         </div>
       </nav>
