@@ -46,10 +46,10 @@ export default function Hero() {
           </div>
 
           {/* Derecha: Acciones B2B */}
-          <div className="flex items-center gap-3 sm:gap-5">
+          <div className="flex items-center gap-2 sm:gap-5">
             <Link
               href="/login"
-              className="text-sm font-medium text-slate-300 transition-colors hover:text-white"
+              className="text-xs sm:text-sm font-medium text-slate-300 transition-colors hover:text-white"
             >
               Log In
             </Link>
@@ -61,9 +61,10 @@ export default function Hero() {
             </Link>
             <Link
               href="/agendar"
-              className="rounded-lg bg-[#1D4ED8] px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-600 sm:px-5"
+              className="whitespace-nowrap rounded-lg bg-[#1D4ED8] px-3 py-2 text-xs font-medium text-white shadow-sm transition-colors hover:bg-blue-600 sm:px-5 sm:text-sm"
             >
-              Agendar Llamada
+              <span className="sm:hidden">Agendar</span>
+              <span className="hidden sm:inline">Agendar Llamada</span>
             </Link>
           </div>
         </div>
