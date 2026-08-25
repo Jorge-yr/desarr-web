@@ -11,7 +11,7 @@
 
 export default function AnimatedLogo() {
   return (
-    <div className="flex items-center gap-4 bg-transparent select-none font-sans">
+    <div className="flex items-center gap-2 sm:gap-4 bg-transparent select-none font-sans">
       {/*
         Inyección de CSS puro para la coreografía de animación.
         Mantiene el componente modular e independiente de hojas de estilo externas.
@@ -75,7 +75,7 @@ export default function AnimatedLogo() {
       />
 
       {/* 1. El Haz de Energía (Isotipo 'D') */}
-      <div className="relative flex-shrink-0 w-12 h-12 md:w-14 md:h-14">
+      <div className="relative flex-shrink-0 w-9 h-9 sm:w-12 sm:h-12 md:w-14 md:h-14">
         <svg
           viewBox="0 0 100 100"
           fill="none"
@@ -116,9 +116,9 @@ export default function AnimatedLogo() {
 
       {/* 2. El Barrido (Logotipo Texto) */}
       <div className="sweep-reveal flex items-center overflow-hidden py-2">
-        <span className="text-2xl md:text-3xl font-extrabold tracking-tight">
+        <span className="whitespace-nowrap text-base sm:text-2xl md:text-3xl font-extrabold tracking-tight">
           <span className="text-[#1D4ED8]">Desarr</span>
-          <span className="text-[#10B981] ml-2">Soluciones</span>
+          <span className="text-[#10B981] ml-1 sm:ml-2">Soluciones</span>
         </span>
       </div>
     </div>
