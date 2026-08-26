@@ -35,6 +35,12 @@ export default function PageHeader() {
         {/* Centro: Enlaces Desktop */}
         <div className="hidden md:flex items-center gap-8">
           <Link
+            href="/"
+            className="text-sm font-medium text-slate-300 transition-colors hover:text-slate-200"
+          >
+            Inicio
+          </Link>
+          <Link
             href="/servicios"
             className="text-sm font-medium text-slate-300 transition-colors hover:text-slate-200"
           >
@@ -84,6 +90,9 @@ export default function PageHeader() {
       {menuOpen && (
         <div className="border-t border-white/5 bg-[#0F172A]/95 backdrop-blur-md md:hidden">
           <div className="flex flex-col gap-1 px-4 py-3">
+            <Link href="/" onClick={() => setMenuOpen(false)} className="rounded-md px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-white/5 hover:text-white">
+              Inicio
+            </Link>
             <Link href="/servicios" onClick={() => setMenuOpen(false)} className="rounded-md px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-white/5 hover:text-white">
               Servicios
             </Link>
