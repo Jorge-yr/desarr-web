@@ -1,12 +1,16 @@
 import Link from "next/link";
+import AnimatedLogo from "@/components/AnimatedLogo";
 
 export default function SiteFooter() {
   return (
     <footer className="border-t border-white/5 bg-[#0F172A] px-4 py-10 sm:px-6 lg:px-8">
-      <div className="mx-auto flex max-w-5xl flex-col items-center gap-4 text-center sm:flex-row sm:justify-between sm:text-left">
-        <p className="text-sm text-slate-400">
-          Desarr Soluciones. Todos los derechos reservados.
-        </p>
+      <div className="mx-auto flex max-w-5xl flex-col items-center gap-6 text-center sm:flex-row sm:justify-between sm:text-left">
+        <div className="flex flex-col items-center gap-3 sm:items-start">
+          <AnimatedLogo />
+          <p className="text-sm text-slate-400">
+            Todos los derechos reservados.
+          </p>
+        </div>
         <div className="flex items-center gap-6">
           <Link
             href="https://instagram.com/desarrsoluciones"
