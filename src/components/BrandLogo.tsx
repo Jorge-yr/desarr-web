@@ -4,14 +4,14 @@ export default function BrandLogo() {
       <style
         dangerouslySetInnerHTML={{
           __html: `
-          @keyframes brandReveal {
-            0% { left: -10%; }
-            18% { left: 130%; }
-            100% { left: 130%; }
+          @keyframes brandSweep {
+            0% { left: -45%; }
+            45% { left: 145%; }
+            100% { left: 145%; }
           }
           @media (prefers-reduced-motion: no-preference) {
-            .brand-cover {
-              animation: brandReveal 5s cubic-bezier(.65,0,.35,1) infinite alternate;
+            .brand-sweep-band {
+              animation: brandSweep 3.6s ease-in-out infinite;
             }
           }
         `,
@@ -25,7 +25,7 @@ export default function BrandLogo() {
       />
 
       <div className="pointer-events-none absolute inset-y-0 left-[24%] right-0 overflow-hidden">
-        <div className="brand-cover absolute -top-1/2 h-[200%] w-[120%] -skew-x-[35deg] bg-[#0F172A]" />
+        <div className="brand-sweep-band absolute -top-1/2 h-[200%] w-1/4 -skew-x-[35deg] bg-gradient-to-r from-transparent via-white/50 to-transparent" />
       </div>
     </div>
   );
