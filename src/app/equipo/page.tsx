@@ -1,5 +1,13 @@
+import PageHeader from "@/components/PageHeader";
 import TeamSection from "@/components/TeamSection";
+import SiteFooter from "@/components/SiteFooter";
 
 export default function Equipo() {
-  return <TeamSection />;
+  return (
+    <>
+      <PageHeader />
+      <TeamSection />
+      <SiteFooter />
+    </>
+  );
 }
