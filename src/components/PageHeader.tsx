@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import AnimatedLogo from "@/components/AnimatedLogo";
+import BrandLogo from "@/components/BrandLogo";
 
 export default function PageHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -10,8 +10,7 @@ export default function PageHeader() {
   return (
     <nav className="sticky top-0 z-50 border-b border-white/5 bg-[#0F172A]/80 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-        
-        {/* Izquierda: Hamburguesa (mobile) + Branding */}
+
         <div className="flex items-center gap-3">
           <button type="button" onClick={() => setMenuOpen((v) => !v)} aria-label="Abrir menú" aria-expanded={menuOpen} className="flex h-9 w-9 items-center justify-center rounded-md text-slate-300 transition-colors hover:text-white md:hidden">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="h-6 w-6">
@@ -28,52 +27,20 @@ export default function PageHeader() {
             className="transition-opacity hover:opacity-80"
             aria-label="Desarr Soluciones"
           >
-            <AnimatedLogo />
+            <BrandLogo />
           </Link>
         </div>
 
-        {/* Centro: Enlaces Desktop */}
         <div className="hidden md:flex items-center gap-8">
-          <Link
-            href="/"
-            className="text-sm font-medium text-slate-300 transition-colors hover:text-slate-200"
-          >
-            Inicio
-          </Link>
-          <Link
-            href="/servicios"
-            className="text-sm font-medium text-slate-300 transition-colors hover:text-slate-200"
-          >
-            Servicios
-          </Link>
-          <Link
-            href="#casos-de-exito"
-            className="text-sm font-medium text-slate-300 transition-colors hover:text-slate-200"
-          >
-            Casos de Éxito
-          </Link>
-          <Link
-            href="/equipo"
-            className="text-sm font-medium text-slate-300 transition-colors hover:text-slate-200"
-          >
-            Equipo
-          </Link>
+          <Link href="/" className="text-sm font-medium text-slate-300 transition-colors hover:text-slate-200">Inicio</Link>
+          <Link href="/servicios" className="text-sm font-medium text-slate-300 transition-colors hover:text-slate-200">Servicios</Link>
+          <Link href="#casos-de-exito" className="text-sm font-medium text-slate-300 transition-colors hover:text-slate-200">Casos de Éxito</Link>
+          <Link href="/equipo" className="text-sm font-medium text-slate-300 transition-colors hover:text-slate-200">Equipo</Link>
         </div>
 
-        {/* Derecha: Acciones B2B */}
         <div className="flex items-center gap-2 sm:gap-5">
-          <Link
-            href="/login"
-            className="text-xs sm:text-sm font-medium text-slate-300 transition-colors hover:text-white"
-          >
-            Log In
-          </Link>
-          <Link
-            href="/registro"
-            className="hidden rounded-lg border border-[#10B981]/40 bg-[#10B981]/10 px-4 py-2 text-sm font-medium text-[#10B981] transition-colors hover:bg-[#10B981]/20 sm:inline-flex"
-          >
-            Regístrate
-          </Link>
+          <Link href="/login" className="text-xs sm:text-sm font-medium text-slate-300 transition-colors hover:text-white">Log In</Link>
+          <Link href="/registro" className="hidden rounded-lg border border-[#10B981]/40 bg-[#10B981]/10 px-4 py-2 text-sm font-medium text-[#10B981] transition-colors hover:bg-[#10B981]/20 sm:inline-flex">Regístrate</Link>
           <Link
             href="https://wa.me/5493794001206?text=Hola!%20Me%20gustar%C3%ADa%20agendar%20una%20llamada%20con%20Desarr%20Soluciones."
             target="_blank"
@@ -86,22 +53,13 @@ export default function PageHeader() {
         </div>
       </div>
 
-      {/* Menú Mobile Desplegable */}
       {menuOpen && (
         <div className="border-t border-white/5 bg-[#0F172A]/95 backdrop-blur-md md:hidden">
           <div className="flex flex-col gap-1 px-4 py-3">
-            <Link href="/" onClick={() => setMenuOpen(false)} className="rounded-md px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-white/5 hover:text-white">
-              Inicio
-            </Link>
-            <Link href="/servicios" onClick={() => setMenuOpen(false)} className="rounded-md px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-white/5 hover:text-white">
-              Servicios
-            </Link>
-            <Link href="#casos-de-exito" onClick={() => setMenuOpen(false)} className="rounded-md px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-white/5 hover:text-white">
-              Casos de Éxito
-            </Link>
-            <Link href="/equipo" onClick={() => setMenuOpen(false)} className="rounded-md px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-white/5 hover:text-white">
-              Equipo
-            </Link>
+            <Link href="/" onClick={() => setMenuOpen(false)} className="rounded-md px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-white/5 hover:text-white">Inicio</Link>
+            <Link href="/servicios" onClick={() => setMenuOpen(false)} className="rounded-md px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-white/5 hover:text-white">Servicios</Link>
+            <Link href="#casos-de-exito" onClick={() => setMenuOpen(false)} className="rounded-md px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-white/5 hover:text-white">Casos de Éxito</Link>
+            <Link href="/equipo" onClick={() => setMenuOpen(false)} className="rounded-md px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-white/5 hover:text-white">Equipo</Link>
           </div>
         </div>
       )}
