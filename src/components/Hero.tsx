@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import AnimatedLogo from "@/components/AnimatedLogo";
+import SiteFooter from "@/components/SiteFooter";
 
 export default function Hero() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -138,6 +139,8 @@ export default function Hero() {
           </Link>
         </div>
       </section>
+
+      <SiteFooter />
     </div>
   );
 }
