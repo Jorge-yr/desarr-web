@@ -23,6 +23,7 @@ interface DETPayload {
   score: number;
   maturityLevel: string;
   answers: DETAnswer[];
+  recommendations?: string[];
   wantsAdvisorContact?: boolean;
   confirmed?: boolean;
 }
@@ -84,6 +85,7 @@ export async function POST(request: Request) {
         totalScore: body.score,
         maturityLevel: body.maturityLevel,
       },
+      recommendations: body.recommendations ?? [],
       solicitaAsesor: solicitaAsesor,
       answersFlat: {
         q1_registros: getAnswer(1),
