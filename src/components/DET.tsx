@@ -40,7 +40,7 @@ interface PhoneCountry {
   label: string;
 }
 
-type SubmitState = "idle" | "loading" | "error" | "confirmation";
+type SubmitState = "idle" | "confirmation";
 type CurtainAnimation = "idle" | "out" | "in";
 
 const PHONE_COUNTRIES: PhoneCountry[] = [
@@ -391,6 +391,7 @@ export default function DET() {
   const [curtainAnim, setCurtainAnim] = useState<CurtainAnimation>("idle");
   const [lead, setLead] = useState<LeadForm>(EMPTY_LEAD);
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
+  const [acceptState, setAcceptState] = useState<"idle" | "loading" | "error">("idle");
   const [wantsAdvisorContact, setWantsAdvisorContact] = useState(true);
   const [locationLoading, setLocationLoading] = useState(false);
   const [locationMessage, setLocationMessage] = useState<string | null>(null);
@@ -504,11 +505,25 @@ export default function DET() {
     );
   };
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  // Este paso ya NO envía nada a Make: solo valida el formulario (vía los
+  // "required" de los inputs) y avanza a la pantalla de confirmación. El
+  // único envío real al webhook ocurre en handleAccept, para que Make
+  // reciba un solo registro completo por persona (con recomendaciones y
+  // el check del asesor incluidos), en vez de dos ejecuciones separadas.
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setSubmitState("loading");
 
+    setCurtainAnim("out");
+    window.setTimeout(() => {
+      setSubmitState("confirmation");
+      setCurtainAnim("in");
+      window.setTimeout(() => setCurtainAnim("idle"), 420);
+    }, 380);
+  };
+
+  const handleAccept = async () => {
     const fullPhone = `${lead.phoneCountryCode}${lead.phoneNumber.replace(/\s/g, "")}`;
+    setAcceptState("loading");
 
     try {
       const response = await fetch("/api/det-submit", {
@@ -519,43 +534,18 @@ export default function DET() {
           score: totalScore,
           maturityLevel: `Nivel ${maturity.level} - ${maturity.name}`,
           answers,
+          recommendations: maturity.recommendations,
+          wantsAdvisorContact,
+          confirmed: true,
         }),
       });
 
       if (!response.ok) throw new Error("Submit failed");
 
-      setCurtainAnim("out");
-      window.setTimeout(() => {
-        setSubmitState("confirmation");
-        setCurtainAnim("in");
-        window.setTimeout(() => setCurtainAnim("idle"), 420);
-      }, 380);
+      router.push("/");
     } catch {
-      setSubmitState("error");
+      setAcceptState("error");
     }
-  };
-
-  const handleAccept = async () => {
-    const fullPhone = `${lead.phoneCountryCode}${lead.phoneNumber.replace(/\s/g, "")}`;
-
-    try {
-      await fetch("/api/det-submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          lead: { ...lead, phone: fullPhone },
-          score: totalScore,
-          maturityLevel: `Nivel ${maturity.level} - ${maturity.name}`,
-          answers,
-          wantsAdvisorContact,
-          confirmed: true,
-        }),
-      });
-    } catch {
-      // La solicitud principal ya fue enviada; no bloqueamos el cierre.
-    }
-
-    router.push("/");
   };
 
   return (
@@ -694,10 +684,17 @@ export default function DET() {
                 <button
                   type="button"
                   onClick={handleAccept}
-                  className="mt-8 w-full rounded-lg bg-[#1D4ED8] px-6 py-4 text-base font-semibold text-white transition-all duration-300 hover:bg-[#2563EB] sm:text-lg"
+                  disabled={acceptState === "loading"}
+                  className="mt-8 w-full rounded-lg bg-[#1D4ED8] px-6 py-4 text-base font-semibold text-white transition-all duration-300 hover:bg-[#2563EB] disabled:cursor-not-allowed disabled:opacity-60 sm:text-lg"
                 >
-                  Aceptar
+                  {acceptState === "loading" ? "Enviando..." : "Aceptar"}
                 </button>
+
+                {acceptState === "error" && (
+                  <p className="mx-auto mt-4 max-w-md rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+                    Hubo un error al enviar. Por favor, intentá nuevamente.
+                  </p>
+                )}
               </div>
             ) : (
               <div className="p-6 sm:p-8">
@@ -933,19 +930,10 @@ export default function DET() {
 
                   <button
                     type="submit"
-                    disabled={submitState === "loading"}
-                    className="w-full rounded-lg bg-[#1D4ED8] px-6 py-4 text-base font-semibold text-white transition-all duration-300 hover:bg-[#2563EB] disabled:cursor-not-allowed disabled:opacity-60"
+                    className="w-full rounded-lg bg-[#1D4ED8] px-6 py-4 text-base font-semibold text-white transition-all duration-300 hover:bg-[#2563EB]"
                   >
-                    {submitState === "loading"
-                      ? "Enviando solicitud..."
-                      : "Recibir mi Diagnóstico y Recomendaciones"}
+                    Recibir mi Diagnóstico y Recomendaciones
                   </button>
-
-                  {submitState === "error" && (
-                    <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-                      Hubo un error al enviar. Por favor, intentá nuevamente.
-                    </p>
-                  )}
                 </form>
               </div>
             )}
