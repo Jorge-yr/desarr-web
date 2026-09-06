@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useId, useState } from "react";
 
 const USE_CASES_DESCRIPTION =
@@ -84,14 +85,14 @@ export default function UseCasesPopup() {
               {USE_CASES_DESCRIPTION}
             </p>
 
-            <div className="mt-8 flex justify-end">
-              <button
-                type="button"
+            <div className="mt-8">
+              <Link
+                href="/auditoria-tecnologica"
                 onClick={() => setOpen(false)}
-                className="rounded-xl bg-[#10B981] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#059669]"
+                className="flex w-full items-center justify-center rounded-xl bg-[#1D4ED8] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#2563EB] sm:text-base"
               >
-                Aceptar
-              </button>
+                Iniciar Diagnóstico de Madurez Tecnológica
+              </Link>
             </div>
           </div>
         </div>
