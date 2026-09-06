@@ -1,4 +1,5 @@
 import Link from "next/link";
+import UseCasesPopup from "@/components/UseCasesPopup";
 
 const DMT_VIGNETTES = [
   {
@@ -136,12 +137,7 @@ export default function Hero() {
             <DMTDependencyTree />
           </div>
 
-          <Link
-            href="/casos-de-uso"
-            className="flex w-full items-center justify-center rounded-xl border border-slate-700 bg-transparent px-8 py-4 text-base font-semibold text-slate-300 transition-all duration-300 hover:bg-slate-800/50 hover:text-white sm:w-auto sm:text-lg"
-          >
-            Ver Casos de Uso
-          </Link>
+          <UseCasesPopup />
         </div>
       </div>
     </section>
