@@ -10,6 +10,7 @@ export interface Testimonial {
   role: string;
   company: string;
   imageUrl: string;
+  imageKind?: "portrait" | "logo";
   socialType: "LinkedIn" | "Instagram";
   socialUrl: string;
 }
@@ -23,6 +24,7 @@ export const TESTIMONIALS: Testimonial[] = [
     role: "Gerente de Compras",
     company: "Previsora el Parana SRL",
     imageUrl: "/testimonials/Testimonio_1.jpg",
+    imageKind: "portrait",
     socialType: "LinkedIn",
     socialUrl: "https://www.linkedin.com/in/augusto-acosta-62b43342/",
   },
@@ -34,6 +36,7 @@ export const TESTIMONIALS: Testimonial[] = [
     role: "Analista de Administración",
     company: "Forestal Argentina S.A.",
     imageUrl: "/testimonials/Testimonio_2.jpg",
+    imageKind: "portrait",
     socialType: "LinkedIn",
     socialUrl: "https://www.linkedin.com/in/lorena-elizabet-meza-334b40363/",
   },
@@ -45,6 +48,7 @@ export const TESTIMONIALS: Testimonial[] = [
     role: "Gerente de Finanzas",
     company: "Teo Pet Shop",
     imageUrl: "/testimonials/Testimonio_3.jpg",
+    imageKind: "logo",
     socialType: "Instagram",
     socialUrl: "https://www.instagram.com/teo.petshop",
   },
@@ -56,6 +60,7 @@ export const TESTIMONIALS: Testimonial[] = [
     role: "Jefa de Marketing",
     company: "Club San Martín",
     imageUrl: "/testimonials/Testimonio_4.jpg",
+    imageKind: "portrait",
     socialType: "Instagram",
     socialUrl: "https://www.instagram.com/florr.padron/",
   },
@@ -79,6 +84,36 @@ function SocialIcon({ type }: { type: Testimonial["socialType"] }) {
   );
 }
 
+function TestimonialAvatar({ testimonial }: { testimonial: Testimonial }) {
+  const isLogo = testimonial.imageKind === "logo";
+
+  return (
+    <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full border border-slate-700">
+      <div
+        className={`flex h-12 w-12 items-center justify-center ${
+          isLogo ? "bg-white" : "bg-slate-800"
+        }`}
+      >
+        <span className="text-lg font-semibold text-[#93C5FD]">
+          {testimonial.author.charAt(0)}
+        </span>
+      </div>
+      <Image
+        src={testimonial.imageUrl}
+        alt={isLogo ? `Logo de ${testimonial.company}` : testimonial.author}
+        fill
+        sizes="48px"
+        className={`absolute inset-0 rounded-full ${
+          isLogo ? "object-contain p-1" : "object-cover"
+        }`}
+        onError={(e) => {
+          e.currentTarget.style.opacity = "0";
+        }}
+      />
+    </div>
+  );
+}
+
 function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
   return (
     <article className="flex w-[340px] shrink-0 flex-col rounded-2xl border border-[#1E293B] bg-slate-900/50 p-6 shadow-lg shadow-black/10 backdrop-blur-sm transition-colors duration-300 hover:border-[#1D4ED8]/30 sm:w-[380px]">
@@ -96,22 +131,7 @@ function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
       </p>
 
       <div className="mt-6 flex items-center gap-3 border-t border-[#1E293B] pt-5">
-        <div className="relative h-12 w-12 shrink-0">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full border border-slate-700 bg-slate-800">
-            <span className="text-lg font-semibold text-[#93C5FD]">
-              {testimonial.author.charAt(0)}
-            </span>
-          </div>
-          <Image
-            src={testimonial.imageUrl}
-            alt={testimonial.author}
-            fill
-            className="absolute inset-0 rounded-full object-cover"
-            onError={(e) => {
-              e.currentTarget.style.opacity = "0";
-            }}
-          />
-        </div>
+        <TestimonialAvatar testimonial={testimonial} />
 
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
