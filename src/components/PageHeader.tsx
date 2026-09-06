@@ -60,6 +60,7 @@ export default function PageHeader() {
             <Link href="/servicios" onClick={() => setMenuOpen(false)} className="rounded-md px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-white/5 hover:text-white">Servicios</Link>
             <Link href="#casos-de-exito" onClick={() => setMenuOpen(false)} className="rounded-md px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-white/5 hover:text-white">Casos de Éxito</Link>
             <Link href="/equipo" onClick={() => setMenuOpen(false)} className="rounded-md px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-white/5 hover:text-white">Equipo</Link>
+            <Link href="/registro" onClick={() => setMenuOpen(false)} className="rounded-md px-3 py-2 text-sm font-medium text-[#10B981] transition-colors hover:bg-white/5">Regístrate</Link>
           </div>
         </div>
       )}

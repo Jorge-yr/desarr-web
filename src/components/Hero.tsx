@@ -90,6 +90,12 @@ export default function Hero() {
           real.
         </h2>
 
+        {/* Separador Borde Láser */}
+        <div
+          aria-hidden="true"
+          className="mx-auto my-12 h-px w-full max-w-3xl bg-gradient-to-r from-transparent via-slate-700/60 to-transparent"
+        />
+
         <div className="mt-10 flex w-full flex-col items-center justify-center gap-4 sm:mt-12 sm:flex-row sm:items-start sm:justify-center sm:gap-6">
           <div className="flex w-full flex-col items-center sm:w-auto">
             <Link
