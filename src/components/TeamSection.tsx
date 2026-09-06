@@ -27,7 +27,7 @@ const PARTNERS: PartnerCardProps[] = [
       { name: "Make" },
       { name: "Power Automate" },
     ],
-    imageUrl: "/team/jorge-ramirez.jpg",
+    imageUrl: "/team/jorge-ramirez.png",
   },
   {
     name: "Maria Sol Romaniuk",
