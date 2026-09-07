@@ -11,8 +11,8 @@ export interface Testimonial {
   company: string;
   imageUrl: string;
   imageKind?: "portrait" | "logo";
-  socialType: "LinkedIn" | "Instagram";
-  socialUrl: string;
+  socialType?: "LinkedIn" | "Instagram";
+  socialUrl?: string;
 }
 
 export const TESTIMONIALS: Testimonial[] = [
@@ -63,6 +63,16 @@ export const TESTIMONIALS: Testimonial[] = [
     imageKind: "portrait",
     socialType: "Instagram",
     socialUrl: "https://www.instagram.com/florr.padron/",
+  },
+  {
+    id: "5",
+    content:
+      "Perdíamos muchísimo tiempo operando manualmente en Excel. Destaco su empatía, inteligencia y profundo conocimiento técnico. Son profesionales que saben exactamente lo que hacen y cómo optimizar la operación.",
+    author: "Alejandra Itatí Sánchez",
+    role: "Administración",
+    company: "Top Neumáticos SRL",
+    imageUrl: "/testimonials/Testimonio_5.jpg",
+    imageKind: "portrait",
   },
 ];
 
@@ -138,15 +148,17 @@ function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
             <p className="truncate text-sm font-semibold text-[#F8FAFC]">
               {testimonial.author}
             </p>
-            <Link
-              href={testimonial.socialUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-slate-400 transition-colors hover:text-[#10B981]"
-              aria-label={`Perfil de ${testimonial.author} en ${testimonial.socialType}`}
-            >
-              <SocialIcon type={testimonial.socialType} />
-            </Link>
+            {testimonial.socialUrl && testimonial.socialType && (
+              <Link
+                href={testimonial.socialUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-slate-400 transition-colors hover:text-[#10B981]"
+                aria-label={`Perfil de ${testimonial.author} en ${testimonial.socialType}`}
+              >
+                <SocialIcon type={testimonial.socialType} />
+              </Link>
+            )}
           </div>
           <p className="truncate text-xs text-slate-400">{testimonial.role}</p>
           <p className="truncate text-xs font-medium text-[#93C5FD]/80">
