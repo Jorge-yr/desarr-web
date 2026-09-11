@@ -78,6 +78,16 @@ export const TESTIMONIALS: Testimonial[] = [
     imageUrl: "/testimonials/Testimonio_5.jpg",
     imageKind: "portrait",
   },
+  {
+    id: "6",
+    content:
+      "Gestionábamos ingresos en cinco pasarelas y diferentes monedas; conciliar todo a mano era un riesgo enorme. Desarrollaron un sistema que concilia automáticamente gestión y contabilidad cliente por cliente. Su gran diferencial es que piensan como contadores y ejecutan como desarrolladores.",
+    author: "Julieta Collado",
+    role: "CFO",
+    company: "Lebrot LLC",
+    imageUrl: "/testimonials/Testimonio_6.jpg",
+    imageKind: "portrait",
+  },
 ];
 
 function SocialIcon({ type }: { type: Testimonial["socialType"] }) {
