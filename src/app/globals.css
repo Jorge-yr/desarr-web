@@ -66,15 +66,6 @@ body {
   animation: det-globe-spin 4s linear infinite;
 }
 
-@keyframes testimonial-marquee {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
-}
-
 .testimonial-marquee-mask {
   -webkit-mask-image: linear-gradient(
     to right,
@@ -93,9 +84,5 @@ body {
 }
 
 .testimonial-marquee-track {
-  animation: testimonial-marquee 45s linear infinite;
-}
-
-.group:hover .testimonial-marquee-track {
-  animation-play-state: paused;
+  will-change: transform;
 }

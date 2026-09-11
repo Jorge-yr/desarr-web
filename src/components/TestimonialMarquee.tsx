@@ -2,6 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useCallback, useEffect, useRef } from "react";
+
+const MARQUEE_DURATION_SECONDS = 45;
+const DRAG_THRESHOLD_PX = 6;
 
 export interface Testimonial {
   id: string;
@@ -170,8 +174,145 @@ function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
   );
 }
 
+function normalizeMarqueeOffset(offset: number, loopWidth: number) {
+  if (loopWidth <= 0) return offset;
+
+  let normalized = offset % loopWidth;
+  if (normalized > 0) normalized -= loopWidth;
+  return normalized;
+}
+
 export default function TestimonialMarquee() {
   const marqueeItems = [...TESTIMONIALS, ...TESTIMONIALS];
+  const containerRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const offsetRef = useRef(0);
+  const loopWidthRef = useRef(0);
+  const speedRef = useRef(0);
+  const isPausedRef = useRef(false);
+  const isDraggingRef = useRef(false);
+  const hasDraggedRef = useRef(false);
+  const dragStartRef = useRef({ pointerX: 0, offset: 0 });
+  const rafRef = useRef<number | null>(null);
+
+  const applyTransform = useCallback((offset: number) => {
+    if (trackRef.current) {
+      trackRef.current.style.transform = `translateX(${offset}px)`;
+    }
+  }, []);
+
+  const measureTrack = useCallback(() => {
+    if (!trackRef.current) return;
+
+    const loopWidth = trackRef.current.scrollWidth / 2;
+    loopWidthRef.current = loopWidth;
+    speedRef.current = loopWidth / MARQUEE_DURATION_SECONDS;
+    offsetRef.current = normalizeMarqueeOffset(offsetRef.current, loopWidth);
+    applyTransform(offsetRef.current);
+  }, [applyTransform]);
+
+  useEffect(() => {
+    measureTrack();
+
+    const resizeObserver =
+      typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(measureTrack)
+        : null;
+
+    if (resizeObserver && trackRef.current) {
+      resizeObserver.observe(trackRef.current);
+    }
+
+    window.addEventListener("resize", measureTrack);
+
+    return () => {
+      resizeObserver?.disconnect();
+      window.removeEventListener("resize", measureTrack);
+    };
+  }, [measureTrack]);
+
+  useEffect(() => {
+    let lastTime = performance.now();
+
+    const tick = (now: number) => {
+      const loopWidth = loopWidthRef.current;
+
+      if (
+        !isPausedRef.current &&
+        !isDraggingRef.current &&
+        loopWidth > 0
+      ) {
+        const deltaSeconds = (now - lastTime) / 1000;
+        offsetRef.current -= speedRef.current * deltaSeconds;
+
+        while (offsetRef.current <= -loopWidth) {
+          offsetRef.current += loopWidth;
+        }
+
+        applyTransform(offsetRef.current);
+      }
+
+      lastTime = now;
+      rafRef.current = requestAnimationFrame(tick);
+    };
+
+    rafRef.current = requestAnimationFrame(tick);
+
+    return () => {
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+      }
+    };
+  }, [applyTransform]);
+
+  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.button !== 0 && event.button !== 2) return;
+
+    event.preventDefault();
+    hasDraggedRef.current = false;
+    isDraggingRef.current = true;
+    dragStartRef.current = {
+      pointerX: event.clientX,
+      offset: offsetRef.current,
+    };
+    containerRef.current?.setPointerCapture(event.pointerId);
+  };
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDraggingRef.current) return;
+
+    const deltaX = event.clientX - dragStartRef.current.pointerX;
+
+    if (Math.abs(deltaX) > DRAG_THRESHOLD_PX) {
+      hasDraggedRef.current = true;
+    }
+
+    offsetRef.current = dragStartRef.current.offset + deltaX;
+    applyTransform(offsetRef.current);
+  };
+
+  const finishDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDraggingRef.current) return;
+
+    isDraggingRef.current = false;
+    offsetRef.current = normalizeMarqueeOffset(
+      offsetRef.current,
+      loopWidthRef.current,
+    );
+    applyTransform(offsetRef.current);
+
+    if (containerRef.current?.hasPointerCapture(event.pointerId)) {
+      containerRef.current.releasePointerCapture(event.pointerId);
+    }
+  };
+
+  const handleTrackClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!hasDraggedRef.current) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    hasDraggedRef.current = false;
+  };
 
   return (
     <section className="bg-[#0F172A] py-16 sm:py-20">
@@ -189,10 +330,26 @@ export default function TestimonialMarquee() {
       </div>
 
       <div
-        className="group relative overflow-hidden testimonial-marquee-mask"
-        aria-label="Testimonios de clientes"
+        ref={containerRef}
+        className="group relative overflow-hidden testimonial-marquee-mask cursor-grab touch-none select-none active:cursor-grabbing"
+        aria-label="Testimonios de clientes. Arrastrá horizontalmente para explorar."
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={finishDrag}
+        onPointerCancel={finishDrag}
+        onContextMenu={(event) => event.preventDefault()}
+        onMouseEnter={() => {
+          isPausedRef.current = true;
+        }}
+        onMouseLeave={() => {
+          isPausedRef.current = false;
+        }}
+        onClickCapture={handleTrackClick}
       >
-        <div className="testimonial-marquee-track flex w-max gap-5 px-4 sm:gap-6 sm:px-6">
+        <div
+          ref={trackRef}
+          className="testimonial-marquee-track flex w-max gap-5 px-4 sm:gap-6 sm:px-6"
+        >
           {marqueeItems.map((testimonial, index) => (
             <TestimonialCard
               key={`${testimonial.id}-${index}`}
