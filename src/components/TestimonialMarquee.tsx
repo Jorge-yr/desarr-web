@@ -77,6 +77,8 @@ export const TESTIMONIALS: Testimonial[] = [
     company: "Top Neumáticos SRL",
     imageUrl: "/testimonials/Testimonio_5.jpg",
     imageKind: "portrait",
+    socialType: "LinkedIn",
+    socialUrl: "https://www.linkedin.com/in/alejandra-itati-sanchez/",
   },
   {
     id: "6",
