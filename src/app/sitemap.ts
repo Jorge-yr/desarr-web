@@ -16,6 +16,12 @@ const publicRoutes: MetadataRoute.Sitemap = [
     priority: 0.8,
   },
   {
+    url: `${siteUrl}/casos-de-exito`,
+    lastModified: new Date(),
+    changeFrequency: "monthly",
+    priority: 0.8,
+  },
+  {
     url: `${siteUrl}/equipo`,
     lastModified: new Date(),
     changeFrequency: "monthly",
