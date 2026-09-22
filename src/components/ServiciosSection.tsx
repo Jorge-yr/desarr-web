@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 const PILARES = [
   {
     name: "Inteligencia de Negocios (BI)",
@@ -165,27 +167,22 @@ export default function ServiciosSection() {
         ))}
       </div>
 
-      <div className="mt-16 rounded-2xl border border-[#7C3AED]/30 bg-slate-800/30 p-6 sm:p-10">
-        <div className="grid grid-cols-1 items-center gap-8 md:grid-cols-2">
-          <div>
-            <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-[#7C3AED]">
-              Caso de ejemplo
-            </p>
-            <h3 className="mb-4 text-2xl font-bold text-[#F8FAFC]">Clinex</h3>
-            <p className="text-[#94A3B8]">
-              Una app a medida que desarrollamos para digitalizar y ordenar procesos puntuales del negocio: un ejemplo de cómo una solución hecha a medida resuelve una necesidad específica.
-            </p>
-          </div>
-          <div className="mx-auto aspect-[9/16] w-full max-w-[280px] overflow-hidden rounded-xl bg-black">
-            <iframe
-              src="https://www.youtube.com/embed/NE2UM285Ntw"
-              title="Clinex - Desarr Soluciones"
-              className="h-full w-full"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
-          </div>
+      <div className="mt-16 flex flex-col items-center justify-between gap-6 rounded-2xl border border-[#7C3AED]/30 bg-slate-800/30 p-6 sm:flex-row sm:p-10">
+        <div>
+          <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-[#7C3AED]">
+            Caso de ejemplo
+          </p>
+          <h3 className="mb-2 text-2xl font-bold text-[#F8FAFC]">Clinex</h3>
+          <p className="max-w-xl text-[#94A3B8]">
+            Una app a medida que desarrollamos para digitalizar y ordenar procesos puntuales del negocio.
+          </p>
         </div>
+        <Link
+          href="/casos-de-exito"
+          className="whitespace-nowrap rounded-lg border border-[#7C3AED]/40 bg-[#7C3AED]/10 px-5 py-2.5 text-sm font-medium text-[#7C3AED] transition-colors hover:bg-[#7C3AED]/20"
+        >
+          Ver Casos de Éxito
+        </Link>
       </div>
     </main>
   );
