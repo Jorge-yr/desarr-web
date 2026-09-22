@@ -34,7 +34,7 @@ export default function PageHeader() {
         <div className="hidden md:flex items-center gap-8">
           <Link href="/" className="text-sm font-medium text-slate-300 transition-colors hover:text-slate-200">Inicio</Link>
           <Link href="/servicios" className="text-sm font-medium text-slate-300 transition-colors hover:text-slate-200">Servicios</Link>
-          <Link href="#casos-de-exito" className="text-sm font-medium text-slate-300 transition-colors hover:text-slate-200">Casos de Éxito</Link>
+          <Link href="/casos-de-exito" className="text-sm font-medium text-slate-300 transition-colors hover:text-slate-200">Casos de Éxito</Link>
           <Link href="/equipo" className="text-sm font-medium text-slate-300 transition-colors hover:text-slate-200">Equipo</Link>
         </div>
 
@@ -58,7 +58,7 @@ export default function PageHeader() {
           <div className="flex flex-col gap-1 px-4 py-3">
             <Link href="/" onClick={() => setMenuOpen(false)} className="rounded-md px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-white/5 hover:text-white">Inicio</Link>
             <Link href="/servicios" onClick={() => setMenuOpen(false)} className="rounded-md px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-white/5 hover:text-white">Servicios</Link>
-            <Link href="#casos-de-exito" onClick={() => setMenuOpen(false)} className="rounded-md px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-white/5 hover:text-white">Casos de Éxito</Link>
+            <Link href="/casos-de-exito" onClick={() => setMenuOpen(false)} className="rounded-md px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-white/5 hover:text-white">Casos de Éxito</Link>
             <Link href="/equipo" onClick={() => setMenuOpen(false)} className="rounded-md px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-white/5 hover:text-white">Equipo</Link>
             <Link href="/registro" onClick={() => setMenuOpen(false)} className="rounded-md px-3 py-2 text-sm font-medium text-[#10B981] transition-colors hover:bg-white/5">Regístrate</Link>
           </div>
