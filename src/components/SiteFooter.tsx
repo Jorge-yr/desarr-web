@@ -11,7 +11,7 @@ export default function SiteFooter() {
             Todos los derechos reservados.
           </p>
         </div>
-        <div className="flex items-center gap-6">
+        <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
           <Link
             href="https://instagram.com/desarrsoluciones"
             target="_blank"
