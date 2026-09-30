@@ -89,6 +89,8 @@ export const TESTIMONIALS: Testimonial[] = [
     company: "Lebrot LLC",
     imageUrl: "/testimonials/Testimonio_6.jpg",
     imageKind: "portrait",
+    socialType: "LinkedIn",
+    socialUrl: "https://www.linkedin.com/in/julieta-collado/",
   },
 ];
 
