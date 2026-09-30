@@ -23,6 +23,10 @@ const NAV_GROUPS: NavGroup[] = [
       { label: "Qué Resolvemos", href: "/servicios#que-resolvemos" },
       { label: "Cómo Trabajamos", href: "/servicios#como-trabajamos" },
       { label: "Packs de Servicios", href: "/servicios#packs-de-servicios" },
+      {
+        label: "Diagnóstico gratuito de Madurez Tecnológica",
+        href: "/auditoria-tecnologica",
+      },
     ],
   },
   {
