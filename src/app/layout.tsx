@@ -23,6 +23,15 @@ export const metadata: Metadata = {
     locale: "es_ES",
     type: "website",
   },
+  icons: {
+    icon: [
+      { url: "/favicon-48.png", sizes: "48x48", type: "image/png" },
+      { url: "/favicon.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
+    shortcut: ["/favicon-48.png"],
+  },
+  manifest: "/manifest.webmanifest",
   verification: {
     google: "i_pnjEhtr3Db3lj9_5t0Rm8ZDwwwNETe_QBmhKnSmf8",
   },
