@@ -1,4 +1,33 @@
-const CASOS = [
+type Caso = {
+  name: string;
+  tag: string;
+  tagColor: string;
+  description: string;
+  highlights?: string[];
+  videoTitle: string;
+  // Video de YouTube (embed) o video propio alojado en /public
+  videoUrl?: string;
+  videoSrc?: string;
+  poster?: string;
+};
+
+const CASOS: Caso[] = [
+  {
+    name: "Liquidador",
+    tag: "Conciliaciones",
+    tagColor: "bg-[#10B981]/10 text-[#10B981]",
+    description:
+      "Liquidaciones de lanzamientos entre socios con los cobros verificados. Cruza lo que informan los closers contra lo que realmente se cobró, aunque los nombres no coincidan, y deja lista la liquidación.",
+    highlights: [
+      "18 ventas informadas por closers",
+      "15 cruzadas solas, aunque los nombres no coincidan",
+      "3 pagos de terceros resueltos con un clic",
+      "0 diferencias en los controles",
+    ],
+    videoSrc: "/casos/liquidador.mp4",
+    poster: "/casos/liquidador-poster.jpg",
+    videoTitle: "Liquidador - Desarr Soluciones",
+  },
   {
     name: "Clinex",
     tag: "App a Medida",
@@ -35,15 +64,37 @@ export default function CasosExitoSection() {
               {caso.tag}
             </span>
             <h3 className="mb-2 text-xl font-bold text-[#F8FAFC]">{caso.name}</h3>
-            <p className="mb-5 text-sm text-[#94A3B8]">{caso.description}</p>
+            <p className="mb-4 text-sm text-[#94A3B8]">{caso.description}</p>
+            {caso.highlights && (
+              <ul className="mb-5 space-y-1 text-sm text-[#CBD5E1]">
+                {caso.highlights.map((h) => (
+                  <li key={h} className="flex gap-2">
+                    <span className="text-[#10B981]">✓</span>
+                    <span>{h}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
             <div className="mx-auto aspect-[9/16] w-full max-w-[280px] overflow-hidden rounded-xl bg-black">
-              <iframe
-                src={caso.videoUrl}
-                title={caso.videoTitle}
-                className="h-full w-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
+              {caso.videoSrc ? (
+                <video
+                  src={caso.videoSrc}
+                  poster={caso.poster}
+                  title={caso.videoTitle}
+                  className="h-full w-full object-cover"
+                  controls
+                  playsInline
+                  preload="none"
+                />
+              ) : (
+                <iframe
+                  src={caso.videoUrl}
+                  title={caso.videoTitle}
+                  className="h-full w-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              )}
             </div>
           </div>
         ))}
