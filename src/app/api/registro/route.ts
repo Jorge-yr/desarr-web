@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { persistLead } from "@/lib/persist-lead";
 
 interface RegistroPayload {
   fullName: string;
@@ -44,10 +45,60 @@ export async function POST(request: Request) {
       );
     }
 
-    console.info("[Registro]", body);
+    const timestamp = new Date().toISOString();
+    const lead = {
+      fullName: body.fullName.trim(),
+      email: body.email.trim(),
+      whatsapp: body.whatsapp.trim(),
+      phoneCountryCode: body.phoneCountryCode?.trim() ?? "",
+      phoneNumber: body.phoneNumber?.trim() ?? "",
+      company: body.company.trim(),
+      contactTimeRange: body.contactTimeRange,
+      contactHourStart: body.contactHourStart,
+      contactHourEnd: body.contactHourEnd,
+    };
+
+    const structuredPayload = {
+      type: "registro",
+      timestamp,
+      lead,
+    };
+
+    const result = await persistLead({
+      source: "registro",
+      sheetRange: process.env.GOOGLE_SHEETS_REGISTRO_RANGE ?? "Registros!A:J",
+      row: [
+        timestamp,
+        lead.fullName,
+        lead.email,
+        lead.whatsapp,
+        lead.company,
+        lead.contactTimeRange,
+        String(lead.contactHourStart),
+        String(lead.contactHourEnd),
+        lead.phoneCountryCode,
+        lead.phoneNumber,
+      ],
+      summaryLines: [
+        `Nombre: ${lead.fullName}`,
+        `Email: ${lead.email}`,
+        `Empresa: ${lead.company}`,
+        `WhatsApp: ${lead.whatsapp}`,
+        `Horario: ${lead.contactTimeRange}`,
+      ],
+      payload: structuredPayload,
+    });
+
+    if (!result.success) {
+      return NextResponse.json(
+        { success: false, error: "Error al registrar la solicitud." },
+        { status: 502 },
+      );
+    }
 
     return NextResponse.json({ success: true });
-  } catch {
+  } catch (error) {
+    console.error("[Registro Exception]", error);
     return NextResponse.json(
       { success: false, error: "Error al procesar la solicitud." },
       { status: 500 },

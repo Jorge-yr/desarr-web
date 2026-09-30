@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { persistLead } from "@/lib/persist-lead";
 
 interface DETAnswer {
   questionId: number;
@@ -57,36 +58,26 @@ export async function POST(request: Request) {
     if (!isValidPayload(body)) {
       return NextResponse.json(
         { success: false, error: "Payload inválido." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    const webhookUrl = process.env.MAKE_WEBHOOK_URL;
-
-    if (!webhookUrl) {
-      console.error("[DET Submit Error] MAKE_WEBHOOK_URL no está definida.");
-      return NextResponse.json(
-        { success: false, error: "Servicio de recepción no configurado en el servidor." },
-        { status: 500 }
-      );
-    }
-
-    // Extracción de cada respuesta por su ID fijo (1 al 7)
     const getAnswer = (id: number) =>
       body.answers.find((a) => a.questionId === id)?.selectedLabel || "";
 
-    // Evaluación del checkbox final
     const solicitaAsesor = body.wantsAdvisorContact ? "SÍ" : "NO";
+    const timestamp = new Date().toISOString();
 
     const structuredPayload = {
-      timestamp: new Date().toISOString(),
+      type: "det",
+      timestamp,
       lead: body.lead,
       diagnostic: {
         totalScore: body.score,
         maturityLevel: body.maturityLevel,
       },
       recommendations: body.recommendations ?? [],
-      solicitaAsesor: solicitaAsesor,
+      solicitaAsesor,
       answersFlat: {
         q1_registros: getAnswer(1),
         q2_centralizacion: getAnswer(2),
@@ -99,20 +90,46 @@ export async function POST(request: Request) {
       answersRaw: body.answers,
     };
 
-    // Envío hacia el webhook de Make
-    const response = await fetch(webhookUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(structuredPayload),
+    const result = await persistLead({
+      source: "det",
+      sheetRange: process.env.GOOGLE_SHEETS_DET_RANGE ?? "DET!A:Z",
+      row: [
+        timestamp,
+        body.lead.fullName,
+        body.lead.company,
+        body.lead.email,
+        body.lead.phone,
+        body.lead.country,
+        body.lead.state,
+        body.lead.companyTypes.join(", "),
+        String(body.score),
+        body.maturityLevel,
+        solicitaAsesor,
+        getAnswer(1),
+        getAnswer(2),
+        getAnswer(3),
+        getAnswer(4),
+        getAnswer(5),
+        getAnswer(6),
+        getAnswer(7),
+        (body.recommendations ?? []).join(" | "),
+      ],
+      summaryLines: [
+        `Nombre: ${body.lead.fullName}`,
+        `Empresa: ${body.lead.company}`,
+        `Email: ${body.lead.email}`,
+        `Teléfono: ${body.lead.phone}`,
+        `Score: ${body.score}`,
+        `Nivel: ${body.maturityLevel}`,
+        `Solicita asesor: ${solicitaAsesor}`,
+      ],
+      payload: structuredPayload,
     });
 
-    if (!response.ok) {
-      console.error(`[DET Submit Error] Make respondió con status: ${response.status}`);
+    if (!result.success) {
       return NextResponse.json(
-        { success: false, error: "Error al registrar en webhook." },
-        { status: 502 }
+        { success: false, error: "Error al registrar el diagnóstico." },
+        { status: 502 },
       );
     }
 
@@ -121,7 +138,7 @@ export async function POST(request: Request) {
     console.error("[DET Submit Exception]", error);
     return NextResponse.json(
       { success: false, error: "Error al procesar la solicitud." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
