@@ -38,6 +38,24 @@ function showFinalFrame(video: HTMLVideoElement) {
   video.pause();
 }
 
+function ReplayIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+      <path d="M21 3v5h-5" />
+    </svg>
+  );
+}
+
 export default function IntroWebVideo() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const settledContainerRef = useRef<HTMLDivElement>(null);
@@ -195,6 +213,26 @@ export default function IntroWebVideo() {
     }
   };
 
+  const handleVideoEnded = () => {
+    if (phase === "fullscreen") {
+      settleIntro();
+      return;
+    }
+
+    const video = videoRef.current;
+    if (video) showFinalFrame(video);
+  };
+
+  const handleReplay = () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    video.currentTime = 0;
+    video.play().catch(() => {
+      showFinalFrame(video);
+    });
+  };
+
   if (phase === "checking") {
     return null;
   }
@@ -226,7 +264,7 @@ export default function IntroWebVideo() {
         className={
           isFloating
             ? "z-[100] overflow-hidden bg-black shadow-2xl shadow-black/40"
-            : "mx-auto aspect-video w-4/6 max-w-full overflow-hidden shadow-2xl shadow-black/30"
+            : "relative mx-auto aspect-video w-4/6 max-w-full overflow-hidden shadow-2xl shadow-black/30"
         }
       >
         <video
@@ -237,10 +275,20 @@ export default function IntroWebVideo() {
           autoPlay={phase === "fullscreen"}
           preload="auto"
           onTimeUpdate={handleTimeUpdate}
-          onEnded={settleIntro}
+          onEnded={handleVideoEnded}
           className="h-full w-full object-cover"
           aria-label="Video introductorio de Desarr Soluciones"
         />
+        {phase === "settled" && (
+          <button
+            type="button"
+            onClick={handleReplay}
+            aria-label="Reproducir video introductorio"
+            className="absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/55 text-white backdrop-blur-sm transition-colors hover:bg-black/75 hover:text-[#10B981] sm:bottom-4 sm:right-4 sm:h-10 sm:w-10"
+          >
+            <ReplayIcon className="h-4 w-4 sm:h-[18px] sm:w-[18px]" />
+          </button>
+        )}
       </div>
     </section>
   );

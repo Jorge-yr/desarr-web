@@ -132,7 +132,10 @@ export default function ServiciosSection() {
       </section>
 
       {/* Qué resolvemos */}
-      <section className="mx-auto max-w-6xl px-4 pb-20 sm:px-6 lg:px-8">
+      <section
+        id="que-resolvemos"
+        className="scroll-mt-24 mx-auto max-w-6xl px-4 pb-20 sm:px-6 lg:px-8"
+      >
         <div className="mb-10 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Qué resolvemos</h2>
           <p className="text-slate-400">Cuatro soluciones, un mismo objetivo: que tu operación funcione sola.</p>
@@ -145,7 +148,7 @@ export default function ServiciosSection() {
       </section>
 
       {/* Cómo trabajamos */}
-      <section className="border-y border-slate-800 bg-[#0B1324]">
+      <section id="como-trabajamos" className="scroll-mt-24 border-y border-slate-800 bg-[#0B1324]">
         <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Cómo trabajamos</h2>
           <p className="mt-3 text-lg text-slate-400">Tres pasos, sin sorpresas.</p>
@@ -199,7 +202,10 @@ export default function ServiciosSection() {
       </section>
 
       {/* Planes de suscripción */}
-      <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:px-8">
+      <section
+        id="packs-de-servicios"
+        className="scroll-mt-24 mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:px-8"
+      >
         <div className="text-center">
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Tu Departamento de Datos, por suscripción</h2>
           <p className="mt-3 text-lg text-slate-400">Elegí el nivel de acompañamiento que necesita tu empresa.</p>

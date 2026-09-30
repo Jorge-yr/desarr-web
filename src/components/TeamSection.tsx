@@ -91,7 +91,10 @@ function PartnerCard({ partner }: { partner: PartnerCardProps }) {
 
 export default function TeamSection() {
   return (
-    <section className="bg-[#0F172A] px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
+    <section
+      id="nuestro-equipo"
+      className="scroll-mt-24 bg-[#0F172A] px-4 py-16 sm:px-6 lg:px-8 lg:py-24"
+    >
       <div className="mx-auto max-w-5xl">
         <div className="mb-12 max-w-2xl">
           <h2 className="text-sm font-bold uppercase tracking-widest text-[#1D4ED8]">

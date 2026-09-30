@@ -329,7 +329,10 @@ export default function TestimonialMarquee() {
   };
 
   return (
-    <section className="bg-[#0F172A] py-16 sm:py-20">
+    <section
+      id="testimonios-clientes"
+      className="scroll-mt-24 bg-[#0F172A] py-16 sm:py-20"
+    >
       <div className="mx-auto mb-10 max-w-7xl px-4 text-center sm:px-6 lg:px-8">
         <p className="text-sm font-medium uppercase tracking-wider text-[#10B981]">
           Casos de Éxito
