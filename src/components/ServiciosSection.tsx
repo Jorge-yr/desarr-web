@@ -258,7 +258,7 @@ export default function ServiciosSection() {
           <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
             <Link
               href="/auditoria-tecnologica"
-              className="rounded-xl bg-white px-7 py-4 text-center font-bold text-[#0F172A] transition-colors hover:bg-slate-100"
+              className="rounded-xl bg-white px-7 py-4 text-center font-bold text-[#0F172A] transition-all duration-300 hover:scale-[1.12] hover:bg-slate-100"
             >
               Hacer el diagnóstico
             </Link>

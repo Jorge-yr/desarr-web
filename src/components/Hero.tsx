@@ -101,7 +101,7 @@ export default function Hero() {
           <div className="flex w-full flex-col items-center sm:w-auto">
             <Link
               href="/auditoria-tecnologica"
-              className="group relative flex w-full max-w-xl items-center justify-center gap-3 rounded-xl bg-[#1D4ED8] px-8 py-5 text-base font-semibold text-white shadow-[0_6px_0_#1e3a8a,0_15px_25px_rgba(29,78,216,0.4)] ring-1 ring-[#3B82F6]/40 transition-all duration-200 hover:bg-[#2563EB] hover:shadow-[0_6px_0_#1e3a8a,0_20px_35px_rgba(29,78,216,0.55)] hover:ring-[#60A5FA]/60 active:translate-y-1 active:shadow-[0_2px_0_#1e3a8a,0_8px_20px_rgba(29,78,216,0.35)] sm:w-auto sm:px-10 sm:text-lg"
+              className="group relative flex w-full max-w-xl items-center justify-center gap-3 rounded-xl bg-[#1D4ED8] px-8 py-5 text-base font-semibold text-white shadow-[0_6px_0_#1e3a8a,0_15px_25px_rgba(29,78,216,0.4)] ring-1 ring-[#3B82F6]/40 transition-all duration-200 hover:scale-[1.12] hover:bg-[#2563EB] hover:shadow-[0_6px_0_#1e3a8a,0_20px_35px_rgba(29,78,216,0.55)] hover:ring-[#60A5FA]/60 active:translate-y-1 active:scale-[1.08] active:shadow-[0_2px_0_#1e3a8a,0_8px_20px_rgba(29,78,216,0.35)] sm:w-auto sm:px-10 sm:text-lg"
             >
             <span
               aria-hidden

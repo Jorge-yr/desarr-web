@@ -89,7 +89,7 @@ export default function UseCasesPopup() {
               <Link
                 href="/auditoria-tecnologica"
                 onClick={() => setOpen(false)}
-                className="flex w-full items-center justify-center rounded-xl bg-[#1D4ED8] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#2563EB] sm:text-base"
+                className="flex w-full items-center justify-center rounded-xl bg-[#1D4ED8] px-6 py-3 text-sm font-semibold text-white transition-all duration-300 hover:scale-[1.12] hover:bg-[#2563EB] sm:text-base"
               >
                 Iniciar Diagnóstico de Madurez Tecnológica
               </Link>
