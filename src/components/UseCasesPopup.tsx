@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useId, useState } from "react";
+import DiagnosticInviteLink from "@/components/DiagnosticInviteLink";
 
 const USE_CASES_DESCRIPTION =
   "Este relevamiento te permite en 3 minutos evaluar 7 dimensiones clave de tu arquitectura operativa (desde el registro diario hasta la capacidad de escala). Al completar las preguntas, obtendrás una evaluación de madurez y los pasos estratégicos sugeridos para digitalizar y automatizar tus procesos sin fricción.";
@@ -86,13 +87,14 @@ export default function UseCasesPopup() {
             </p>
 
             <div className="mt-8">
-              <Link
+              <DiagnosticInviteLink
                 href="/auditoria-tecnologica"
                 onClick={() => setOpen(false)}
-                className="flex w-full items-center justify-center rounded-xl bg-[#1D4ED8] px-6 py-3 text-sm font-semibold text-white transition-all duration-300 hover:scale-[1.12] hover:bg-[#2563EB] sm:text-base"
+                wrapperClassName="w-full"
+                className="flex w-full items-center justify-center rounded-xl bg-[#1D4ED8] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#2563EB] sm:text-base"
               >
                 Iniciar Diagnóstico de Madurez Tecnológica
-              </Link>
+              </DiagnosticInviteLink>
             </div>
           </div>
         </div>

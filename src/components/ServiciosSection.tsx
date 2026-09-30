@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import DiagnosticInviteLink from "@/components/DiagnosticInviteLink";
 import PasoCard from "@/components/servicios/PasoCard";
 import PlanCard from "@/components/servicios/PlanCard";
 import ServiciosHeroIntro from "@/components/servicios/ServiciosHeroIntro";
@@ -256,12 +257,12 @@ export default function ServiciosSection() {
             </p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
-            <Link
+            <DiagnosticInviteLink
               href="/auditoria-tecnologica"
-              className="rounded-xl bg-white px-7 py-4 text-center font-bold text-[#0F172A] transition-all duration-300 hover:scale-[1.12] hover:bg-slate-100"
+              className="block rounded-xl bg-white px-7 py-4 text-center font-bold text-[#0F172A] transition-colors hover:bg-slate-100"
             >
               Hacer el diagnóstico
-            </Link>
+            </DiagnosticInviteLink>
             <Link
               href={whatsappLink("Hola! Me gustaría agendar una llamada con Desarr Soluciones.")}
               target="_blank"
