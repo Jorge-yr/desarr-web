@@ -36,10 +36,11 @@ export default function PageHeader() {
           <Link href="/servicios" className="text-sm font-medium text-slate-300 transition-colors hover:text-slate-200">Servicios</Link>
           <Link href="/casos-de-exito" className="text-sm font-medium text-slate-300 transition-colors hover:text-slate-200">Casos de Éxito</Link>
           <Link href="/equipo" className="text-sm font-medium text-slate-300 transition-colors hover:text-slate-200">Equipo</Link>
+          <Link href="/equipo#socios-estrategicos" className="text-sm font-medium text-slate-300 transition-colors hover:text-slate-200">Socios Estratégicos</Link>
         </div>
 
         <div className="flex items-center gap-2 sm:gap-5">
-          <Link href="/login" className="text-xs sm:text-sm font-medium text-slate-300 transition-colors hover:text-white">Log In</Link>
+          <Link href="/login" className="hidden text-xs sm:text-sm font-medium text-slate-300 transition-colors hover:text-white">Log In</Link>
           <Link href="/registro" className="hidden rounded-lg border border-[#10B981]/40 bg-[#10B981]/10 px-4 py-2 text-sm font-medium text-[#10B981] transition-colors hover:bg-[#10B981]/20 sm:inline-flex">Regístrate</Link>
           <Link
             href="https://wa.me/5493794001206?text=Hola!%20Me%20gustar%C3%ADa%20agendar%20una%20llamada%20con%20Desarr%20Soluciones."
@@ -60,6 +61,7 @@ export default function PageHeader() {
             <Link href="/servicios" onClick={() => setMenuOpen(false)} className="rounded-md px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-white/5 hover:text-white">Servicios</Link>
             <Link href="/casos-de-exito" onClick={() => setMenuOpen(false)} className="rounded-md px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-white/5 hover:text-white">Casos de Éxito</Link>
             <Link href="/equipo" onClick={() => setMenuOpen(false)} className="rounded-md px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-white/5 hover:text-white">Equipo</Link>
+            <Link href="/equipo#socios-estrategicos" onClick={() => setMenuOpen(false)} className="rounded-md px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-white/5 hover:text-white">Socios Estratégicos</Link>
             <Link href="/registro" onClick={() => setMenuOpen(false)} className="rounded-md px-3 py-2 text-sm font-medium text-[#10B981] transition-colors hover:bg-white/5">Regístrate</Link>
           </div>
         </div>

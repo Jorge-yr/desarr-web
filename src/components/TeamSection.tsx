@@ -1,5 +1,6 @@
 "use client";
 import Image from "next/image";
+import TechStackIcon from "@/components/TechStackIcon";
 
 interface TechTag {
   name: string;
@@ -75,8 +76,9 @@ function PartnerCard({ partner }: { partner: PartnerCardProps }) {
             {partner.techStack.map((tech) => (
               <span
                 key={tech.name}
-                className="inline-flex items-center rounded-md border border-[#1D4ED8]/30 bg-[#1D4ED8]/10 px-2.5 py-1 text-xs font-semibold text-[#93C5FD] transition-colors group-hover:border-[#1D4ED8]/50 group-hover:bg-[#1D4ED8]/20"
+                className="inline-flex items-center gap-1.5 rounded-md border border-[#1D4ED8]/30 bg-[#1D4ED8]/10 px-2.5 py-1 text-xs font-semibold text-[#93C5FD] transition-colors group-hover:border-[#1D4ED8]/50 group-hover:bg-[#1D4ED8]/20"
               >
+                <TechStackIcon name={tech.name} />
                 {tech.name}
               </span>
             ))}

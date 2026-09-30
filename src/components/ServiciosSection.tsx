@@ -1,5 +1,9 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import PasoCard from "@/components/servicios/PasoCard";
+import PlanCard from "@/components/servicios/PlanCard";
+import ServiciosHeroIntro from "@/components/servicios/ServiciosHeroIntro";
+import SolucionCard from "@/components/servicios/SolucionCard";
 
 const WHATSAPP_BASE = "https://wa.me/5493794001206?text=";
 
@@ -123,19 +127,7 @@ export default function ServiciosSection() {
     <main className="text-[#F8FAFC]">
       {/* Encabezado */}
       <section className="mx-auto max-w-6xl px-4 pb-14 pt-16 sm:px-6 sm:pt-24 lg:px-8">
-        <span className="inline-block rounded-full border border-[#164E63] bg-[#0C2A3A] px-3.5 py-2 text-xs font-semibold uppercase tracking-widest text-[#22D3EE]">
-          Servicios
-        </span>
-        <h1 className="mt-6 max-w-4xl text-4xl font-extrabold leading-tight tracking-tight sm:text-6xl">
-          Menos planillas.{" "}
-          <span className="bg-gradient-to-r from-[#60A5FA] via-[#22D3EE] to-[#34D399] bg-clip-text text-transparent">
-            Más claridad para decidir.
-          </span>
-        </h1>
-        <p className="mt-6 max-w-3xl text-lg leading-relaxed text-slate-300 sm:text-xl">
-          Optimizamos tus procesos y tus datos para liberar tu tiempo y dar claridad a tu negocio. Pensamos como
-          contadores y ejecutamos como desarrolladores.
-        </p>
+        <ServiciosHeroIntro />
       </section>
 
       {/* Qué resolvemos */}
@@ -146,19 +138,7 @@ export default function ServiciosSection() {
         </div>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           {SOLUCIONES.map((s) => (
-            <article key={s.title} className="flex flex-col gap-4 rounded-2xl border border-[#1E2B45] bg-[#111C33] p-7 sm:p-9">
-              <div className="flex items-center justify-between">
-                <div className={`${s.iconBg} ${s.accent} flex h-12 w-12 items-center justify-center rounded-xl`}>{s.icon}</div>
-                <span className={`${s.accent} text-xs font-semibold uppercase tracking-wider`}>{s.tag}</span>
-              </div>
-              <p className="text-sm italic text-slate-400">{s.pain}</p>
-              <h3 className="text-2xl font-bold tracking-tight">{s.title}</h3>
-              <ul className="list-disc space-y-2 pl-5 text-slate-300">
-                {s.items.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            </article>
+            <SolucionCard key={s.title} {...s} />
           ))}
         </div>
       </section>
@@ -169,16 +149,16 @@ export default function ServiciosSection() {
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Cómo trabajamos</h2>
           <p className="mt-3 text-lg text-slate-400">Tres pasos, sin sorpresas.</p>
           <div className="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-3">
-            <div className="flex flex-col gap-4 rounded-2xl border border-[#1E2B45] bg-[#0F172A] p-8">
+            <PasoCard className="border border-[#1E2B45] bg-[#0F172A] p-8">
               <span className="text-4xl font-extrabold text-[#1E3A8A]">01</span>
               <h3 className="text-xl font-bold">Diagnóstico</h3>
               <p className="leading-relaxed text-slate-300">
                 Empezás con el test online gratuito. Después, un diagnóstico profundo con prueba piloto para medir las
                 horas que estás perdiendo.
               </p>
-            </div>
+            </PasoCard>
 
-            <div className="flex flex-col gap-4 rounded-2xl border border-[#1E2B45] bg-[#0F172A] p-8">
+            <PasoCard className="border border-[#1E2B45] bg-[#0F172A] p-8">
               <span className="text-4xl font-extrabold text-[#155E75]">02</span>
               <h3 className="text-xl font-bold">Implementación</h3>
               <div className="flex flex-col gap-1.5 rounded-xl border border-[#155E75] bg-[#082F3B] p-4">
@@ -199,9 +179,9 @@ export default function ServiciosSection() {
                   Armamos tus automatizaciones, conexiones y tableros. Un único pago, calculado según lo que te ahorra.
                 </p>
               </div>
-            </div>
+            </PasoCard>
 
-            <div className="flex flex-col gap-4 rounded-2xl border border-[#10B981] bg-[#0A1F1C] p-8">
+            <PasoCard className="border border-[#10B981] bg-[#0A1F1C] p-8">
               <div className="flex items-center justify-between">
                 <span className="text-4xl font-extrabold text-[#047857]">03</span>
                 <span className="rounded-full border border-[#047857] px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-[#34D399]">
@@ -212,7 +192,7 @@ export default function ServiciosSection() {
               <p className="leading-relaxed text-slate-300">
                 Un abono mensual para que todo siga funcionando, se mantenga al día y crezca con tu negocio.
               </p>
-            </div>
+            </PasoCard>
           </div>
         </div>
       </section>
@@ -225,39 +205,13 @@ export default function ServiciosSection() {
         </div>
         <div className="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-3">
           {PLANES.map((plan) => (
-            <div
+            <PlanCard
               key={plan.name}
-              className={`flex flex-col gap-5 rounded-2xl p-8 ${
-                plan.featured ? "border-2 border-[#1D4ED8] bg-[#0E1B3D]" : "border border-[#1E2B45] bg-[#111C33]"
-              }`}
-            >
-              <div className="flex items-center justify-between gap-3">
-                <h3 className="text-xl font-bold">{plan.name}</h3>
-                {plan.featured && (
-                  <span className="rounded-full bg-[#1D4ED8] px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-white">
-                    Más elegido
-                  </span>
-                )}
-              </div>
-              <p className="text-sm text-slate-400">{plan.caption}</p>
-              <ul className="flex-grow list-disc space-y-2 pl-5 text-sm text-slate-300">
-                {plan.items.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-              <Link
-                href={whatsappLink(`Hola! Quiero consultar por el plan ${plan.name} de Desarr Soluciones.`)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`rounded-lg py-3 text-center text-sm font-semibold transition-colors ${
-                  plan.featured
-                    ? "bg-[#1D4ED8] text-white hover:bg-[#1E40AF]"
-                    : "border border-slate-700 text-slate-100 hover:bg-white/5"
-                }`}
-              >
-                Consultar
-              </Link>
-            </div>
+              {...plan}
+              whatsappHref={whatsappLink(
+                `Hola! Quiero consultar por el plan ${plan.name} de Desarr Soluciones.`,
+              )}
+            />
           ))}
         </div>
       </section>

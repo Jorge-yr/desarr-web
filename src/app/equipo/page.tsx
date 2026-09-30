@@ -1,4 +1,5 @@
 import PageHeader from "@/components/PageHeader";
+import PartnersSection from "@/components/PartnersSection";
 import TeamSection from "@/components/TeamSection";
 import SiteFooter from "@/components/SiteFooter";
 
@@ -7,6 +8,7 @@ export default function Equipo() {
     <>
       <PageHeader />
       <TeamSection />
+      <PartnersSection />
       <SiteFooter />
     </>
   );
