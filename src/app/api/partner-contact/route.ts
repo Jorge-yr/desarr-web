@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getPartnerById } from "@/lib/partners-data";
+import { persistLead } from "@/lib/persist-lead";
 
 interface PartnerContactPayload {
   partnerId: string;
@@ -47,43 +48,56 @@ export async function POST(request: Request) {
       );
     }
 
+    const timestamp = new Date().toISOString();
+    const sender = {
+      name: body.senderName.trim(),
+      email: body.senderEmail.trim(),
+      phone: body.senderPhone.trim(),
+      message: body.message.trim(),
+    };
+
     const structuredPayload = {
       type: "partner-contact",
-      timestamp: new Date().toISOString(),
+      timestamp,
       partner: {
         id: partner.id,
         name: partner.name,
         email: partner.partnerEmail,
         specialty: partner.specialty,
       },
-      sender: {
-        name: body.senderName.trim(),
-        email: body.senderEmail.trim(),
-        phone: body.senderPhone.trim(),
-        message: body.message.trim(),
-      },
+      sender,
     };
 
-    const webhookUrl = process.env.MAKE_WEBHOOK_URL;
+    const result = await persistLead({
+      source: "partner-contact",
+      sheetRange:
+        process.env.GOOGLE_SHEETS_PARTNERS_RANGE ?? "Contacto_para_Socios!A:I",
+      row: [
+        timestamp,
+        partner.id,
+        partner.name,
+        partner.partnerEmail,
+        partner.specialty,
+        sender.name,
+        sender.email,
+        sender.phone,
+        sender.message,
+      ],
+      summaryLines: [
+        `Partner: ${partner.name} (${partner.partnerEmail})`,
+        `Especialidad: ${partner.specialty}`,
+        `De: ${sender.name} <${sender.email}>`,
+        `Teléfono: ${sender.phone}`,
+        `Mensaje: ${sender.message}`,
+      ],
+      payload: structuredPayload,
+    });
 
-    if (webhookUrl) {
-      const response = await fetch(webhookUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(structuredPayload),
-      });
-
-      if (!response.ok) {
-        console.error(
-          `[Partner Contact Error] Webhook respondió con status: ${response.status}`,
-        );
-        return NextResponse.json(
-          { success: false, error: "Error al registrar la consulta." },
-          { status: 502 },
-        );
-      }
-    } else {
-      console.info("[Partner Contact]", structuredPayload);
+    if (!result.success) {
+      return NextResponse.json(
+        { success: false, error: "Error al registrar la consulta." },
+        { status: 502 },
+      );
     }
 
     return NextResponse.json({ success: true });
