@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { LoginForm } from "@/components/admin/LoginForm";
+import { isSupabaseConfigured } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "Ingreso | Administración",
@@ -17,7 +18,7 @@ export default function LoginPage() {
           Acceso de la clínica para ver tableros de Looker o parametrizar el turnero.
         </p>
         <Suspense fallback={<p className="mt-6 text-sm text-slate-500">Cargando…</p>}>
-          <LoginForm />
+          <LoginForm mode={isSupabaseConfigured() ? "supabase" : "demo"} />
         </Suspense>
       </section>
     </main>

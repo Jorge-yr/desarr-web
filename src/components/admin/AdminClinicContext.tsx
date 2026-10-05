@@ -7,14 +7,16 @@ const AdminClinicContext = createContext<ClinicaAdmin | null>(null);
 
 export function AdminClinicProvider({
   idClinica,
+  clinic,
   children,
 }: {
-  idClinica: string;
+  idClinica?: string;
+  clinic?: ClinicaAdmin;
   children: React.ReactNode;
 }) {
-  const clinic = CLINICAS.find((c) => c.idClinica === idClinica) ?? null;
-  if (!clinic) return null;
-  return <AdminClinicContext.Provider value={clinic}>{children}</AdminClinicContext.Provider>;
+  const resolved = clinic ?? CLINICAS.find((c) => c.idClinica === idClinica) ?? null;
+  if (!resolved) return null;
+  return <AdminClinicContext.Provider value={resolved}>{children}</AdminClinicContext.Provider>;
 }
 
 export function useAdminClinic() {

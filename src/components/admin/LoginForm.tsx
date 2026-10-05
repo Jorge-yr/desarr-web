@@ -1,16 +1,18 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useActionState, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { signInAdmin } from "@/app/login/actions";
 import { writeAdminSession } from "@/lib/admin-session";
 import { clinicaPorEmail } from "@/lib/clinicas";
 
-export function LoginForm() {
+export function LoginForm({ mode }: { mode: "supabase" | "demo" }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("admin@clinica.demo");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [authState, authAction, pending] = useActionState(signInAdmin, null);
 
   function onSubmit(event: FormEvent) {
     event.preventDefault();
@@ -26,6 +28,46 @@ export function LoginForm() {
     });
     const next = searchParams.get("next");
     router.replace(next && next.startsWith("/admin") ? next : "/admin");
+  }
+
+  if (mode === "supabase") {
+    return (
+      <form action={authAction} className="mt-6 flex flex-col gap-4">
+        <input type="hidden" name="next" value={searchParams.get("next") ?? ""} />
+        <label className="flex flex-col gap-1 text-sm">
+          <span className="font-medium text-slate-600">Correo</span>
+          <input
+            name="email"
+            type="email"
+            autoComplete="username"
+            required
+            className="rounded-lg border border-slate-300 px-3 py-2"
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-sm">
+          <span className="font-medium text-slate-600">Contraseña</span>
+          <input
+            name="password"
+            type="password"
+            autoComplete="current-password"
+            required
+            minLength={8}
+            className="rounded-lg border border-slate-300 px-3 py-2"
+          />
+        </label>
+        {authState?.error && <p className="text-sm text-red-700">{authState.error}</p>}
+        <button
+          type="submit"
+          disabled={pending}
+          className="rounded-lg bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-800 disabled:opacity-60"
+        >
+          Entrar
+        </button>
+        <p className="text-xs text-slate-500">
+          La contraseña la valida Supabase Auth. La clínica sale de admin_usuarios, no del navegador.
+        </p>
+      </form>
+    );
   }
 
   return (

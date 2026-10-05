@@ -97,7 +97,7 @@ function loadAll(idClinica: string): Record<string, Config> {
 export function HorariosPanel() {
   const clinic = useAdminClinic();
   const professionals = clinic.profesionales;
-  const [profId, setProfId] = useState(professionals[0].id);
+  const [profId, setProfId] = useState(professionals[0]?.id ?? "");
   const [configs, setConfigs] = useState<Record<string, Config>>(() => {
     const next: Record<string, Config> = {};
     for (const p of professionals) next[p.id] = defaultConfig();
@@ -188,6 +188,10 @@ export function HorariosPanel() {
 
   const blocks = blocksFromSlots(config.slots);
   const prof = professionals.find((p) => p.id === profId) ?? professionals[0];
+
+  if (!prof) {
+    return <p className="p-6 text-sm text-slate-600">Esta clínica no tiene profesionales cargados.</p>;
+  }
 
   return (
     <div
