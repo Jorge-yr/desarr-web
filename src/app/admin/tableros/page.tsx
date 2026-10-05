@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ClinicFilterNote } from "@/components/admin/ClinicFilterNote";
 
 export const metadata: Metadata = {
-  title: "Tableros | Administración",
+  title: "Tableros del Negocio | Administración",
 };
 
 const BOARDS = [
@@ -18,7 +18,8 @@ export default function TablerosPage() {
       <Link href="/admin" className="text-sm font-medium text-teal-800 hover:underline">
         Volver al panel
       </Link>
-      <h1 className="mt-3 text-2xl font-semibold tracking-tight">Tableros de Looker</h1>
+      <h1 className="mt-3 text-2xl font-semibold tracking-tight">Tableros del Negocio</h1>
+      <p className="mt-1 text-sm text-slate-500">motor Looker</p>
       <ClinicFilterNote />
       <div className="mt-8 grid gap-4">
         {BOARDS.map((board) => (
