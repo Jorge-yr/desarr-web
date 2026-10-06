@@ -23,7 +23,7 @@ export async function getAdminClinic(): Promise<ClinicaAdmin | null> {
     .select("id_profesional, nombre, apellido")
     .eq("id_clinica", admin.id_clinica);
 
-  const lista = profesionales ?? [];
+  const lista = Array.isArray(profesionales) ? profesionales : [];
 
   return {
     idClinica: admin.id_clinica,

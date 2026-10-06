@@ -19,14 +19,19 @@ export async function signInAdmin(_prev: { error: string } | null, formData: For
   const supabase = await createSupabaseServerClient();
   const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error || !authData.user) {
-    return { error: "Correo o contraseña incorrectos." };
+    return { error: error?.message ?? "Auth no devolvió un usuario." };
   }
 
-  const { data: admin } = await supabase
+  const { data: admin, error: adminError } = await supabase
     .from("admin_usuarios")
     .select("id_clinica")
     .eq("user_id", authData.user.id)
     .maybeSingle();
+
+  if (adminError) {
+    await supabase.auth.signOut();
+    return { error: adminError.message };
+  }
 
   if (!admin?.id_clinica) {
     await supabase.auth.signOut();

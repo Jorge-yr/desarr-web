@@ -108,6 +108,7 @@ export function HorariosPanel() {
   const drag = useRef<{ painting: boolean; active: boolean } | null>(null);
 
   useEffect(() => {
+    if (professionals.length === 0) return;
     const stored = loadAll(clinic.idClinica);
     const next: Record<string, Config> = {};
     for (const p of professionals) {
