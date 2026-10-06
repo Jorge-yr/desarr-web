@@ -178,7 +178,6 @@ export default function ServiciosSection() {
       >
         <div className="mb-10 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Servicios contables e impositivos</h2>
-          <p className="text-slate-400">Impuestos y administración en orden, con una contadora matriculada.</p>
         </div>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           {SERVICIOS_CONTABLES.map((servicio) => (
