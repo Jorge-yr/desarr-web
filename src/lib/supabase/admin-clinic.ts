@@ -20,7 +20,7 @@ export async function getAdminClinic(): Promise<ClinicaAdmin | null> {
 
   const { data: profesionales } = await supabase
     .from("profesionales")
-    .select("id_profesional, nombre, apellido")
+    .select("id_profesional, nombre_completo, apellido_completo")
     .eq("id_clinica", admin.id_clinica);
 
   const lista = Array.isArray(profesionales) ? profesionales : [];
@@ -31,7 +31,7 @@ export async function getAdminClinic(): Promise<ClinicaAdmin | null> {
     email: auth.user.email ?? "",
     profesionales: lista.map((p) => ({
       id: String(p.id_profesional),
-      nombre: [p.nombre, p.apellido].filter(Boolean).join(" "),
+      nombre: [p.nombre_completo, p.apellido_completo].filter(Boolean).join(" "),
       especialidad: "",
     })),
   };
