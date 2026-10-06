@@ -97,6 +97,30 @@ const SOLUCIONES: Solucion[] = [
   },
 ];
 
+type ServicioContable = {
+  title: string;
+  description: string;
+};
+
+const SERVICIOS_CONTABLES: ServicioContable[] = [
+  {
+    title: "Monotributo",
+    description: "Altas, recategorizaciones, facturación y vencimientos.",
+  },
+  {
+    title: "Impuestos",
+    description: "IVA, Ganancias, Ingresos Brutos y planificación fiscal.",
+  },
+  {
+    title: "Administración",
+    description: "Conciliación de cobros y pagos, orden de comprobantes.",
+  },
+  {
+    title: "Balances",
+    description: "Estados contables con notas, presentaciones y certificaciones.",
+  },
+];
+
 type Plan = {
   name: string;
   caption: string;
@@ -144,6 +168,39 @@ export default function ServiciosSection() {
           {SOLUCIONES.map((s) => (
             <SolucionCard key={s.title} {...s} />
           ))}
+        </div>
+      </section>
+
+      {/* Servicios contables */}
+      <section
+        id="servicios-contables"
+        className="scroll-mt-24 mx-auto max-w-6xl px-4 pb-20 sm:px-6 lg:px-8"
+      >
+        <div className="mb-10 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Servicios contables e impositivos</h2>
+          <p className="text-slate-400">Impuestos y administración en orden, con una contadora matriculada.</p>
+        </div>
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          {SERVICIOS_CONTABLES.map((servicio) => (
+            <div key={servicio.title} className="rounded-2xl border border-[#1E2B45] bg-[#111C33] p-7">
+              <h3 className="text-xl font-bold text-[#60A5FA]">{servicio.title}</h3>
+              <p className="mt-2 leading-relaxed text-slate-300">{servicio.description}</p>
+            </div>
+          ))}
+        </div>
+        <div className="mt-6 flex flex-col items-start justify-between gap-5 rounded-2xl border border-[#10B981]/40 bg-[#0A1F1C] p-7 sm:flex-row sm:items-center">
+          <div>
+            <p className="text-lg font-bold">Maria Sol Romaniuk</p>
+            <p className="mt-1 text-sm text-slate-300">Contadora Pública · CPCE Corrientes · Mat. 4328</p>
+          </div>
+          <Link
+            href={whatsappLink("Hola! Quiero hacer una consulta contable con Desarr Soluciones.")}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="whitespace-nowrap rounded-full bg-[#10B981] px-6 py-3 text-sm font-bold text-[#0F172A] transition-colors hover:bg-[#34D399]"
+          >
+            1.ª consulta sin cargo
+          </Link>
         </div>
       </section>
 
