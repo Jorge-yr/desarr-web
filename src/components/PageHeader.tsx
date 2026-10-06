@@ -21,6 +21,7 @@ const NAV_GROUPS: NavGroup[] = [
     href: "/servicios",
     children: [
       { label: "Qué Resolvemos", href: "/servicios#que-resolvemos" },
+      { label: "Servicios Contables", href: "/servicios#servicios-contables" },
       { label: "Cómo Trabajamos", href: "/servicios#como-trabajamos" },
       { label: "Packs de Servicios", href: "/servicios#packs-de-servicios" },
       {
