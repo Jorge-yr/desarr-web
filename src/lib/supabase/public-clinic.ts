@@ -1,0 +1,95 @@
+import { createSupabaseServerClient, isSupabaseConfigured } from "@/lib/supabase/server";
+import { armarHuecos, type Bloque, type SlotPublico } from "@/lib/turno/huecos";
+
+export type ProfesionalPublico = { id: string; nombre: string };
+
+export type ClinicaPublica = {
+  idClinica: string;
+  nombre: string;
+  profesionales: ProfesionalPublico[];
+  duracionMin: number;
+  senaArs: number;
+  huecos: Record<string, SlotPublico[]>;
+  aviso: string | null;
+};
+
+export async function getClinicaPublica(idClinica: string): Promise<ClinicaPublica> {
+  const vacia: ClinicaPublica = {
+    idClinica,
+    nombre: idClinica,
+    profesionales: [],
+    duracionMin: 30,
+    senaArs: 0,
+    huecos: {},
+    aviso: null,
+  };
+  if (!isSupabaseConfigured()) {
+    return { ...vacia, aviso: "Supabase no está configurado en este servidor." };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data: clinica } = await supabase
+    .from("maestro_administradores")
+    .select("clinica_consultorio")
+    .eq("id_clinica", idClinica)
+    .maybeSingle();
+
+  const { data: profesionales, error } = await supabase
+    .from("profesionales")
+    .select("id_profesional, nombre_completo, apellido_completo")
+    .eq("id_clinica", idClinica);
+
+  if (error || !Array.isArray(profesionales)) {
+    return {
+      ...vacia,
+      nombre: clinica?.clinica_consultorio ?? idClinica,
+      aviso: "La clínica todavía no se puede leer sin iniciar sesión.",
+    };
+  }
+
+  const lista: ProfesionalPublico[] = profesionales.map((p) => ({
+    id: String(p.id_profesional),
+    nombre: [p.nombre_completo, p.apellido_completo].filter(Boolean).join(" "),
+  }));
+
+  const huecos: Record<string, SlotPublico[]> = {};
+  for (const profesional of lista) {
+    const { data: config } = await supabase
+      .from("configuracion_turnero")
+      .select("duracion_turno_min, dias_visibles, importe_sena_ars")
+      .eq("id_clinica", idClinica)
+      .eq("id_profesional", profesional.id)
+      .maybeSingle();
+    const { data: bloques } = await supabase
+      .from("horarios_profesionales")
+      .select("dia_semana, hora_desde, hora_hasta")
+      .eq("id_clinica", idClinica)
+      .eq("id_profesional", profesional.id);
+
+    const parsed: Bloque[] = Array.isArray(bloques)
+      ? bloques.map((b) => ({
+          dia: Number(b.dia_semana),
+          desde: String(b.hora_desde).slice(0, 5),
+          hasta: String(b.hora_hasta).slice(0, 5),
+        }))
+      : [];
+
+    huecos[profesional.id] = armarHuecos({
+      bloques: parsed,
+      duracionMin: Number(config?.duracion_turno_min ?? 30),
+      diasAdelante: Number(config?.dias_visibles ?? 21),
+    });
+    vacia.duracionMin = Number(config?.duracion_turno_min ?? vacia.duracionMin);
+    vacia.senaArs = Number(config?.importe_sena_ars ?? vacia.senaArs);
+  }
+
+  return {
+    idClinica,
+    nombre: clinica?.clinica_consultorio ?? idClinica,
+    profesionales: lista,
+    duracionMin: vacia.duracionMin,
+    senaArs: vacia.senaArs,
+    huecos,
+    aviso: lista.length === 0 ? "Esta clínica no tiene profesionales cargados." : null,
+  };
+}
