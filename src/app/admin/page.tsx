@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ClinicFilterNote } from "@/components/admin/ClinicFilterNote";
+import { LinkParaPacientes } from "@/components/admin/LinkParaPacientes";
 
 export const metadata: Metadata = {
   title: "Panel | Administración",
@@ -12,6 +13,7 @@ export default function AdminHomePage() {
       <p className="text-xs font-semibold uppercase tracking-wide text-teal-700">Panel principal</p>
       <h1 className="mt-1 text-2xl font-semibold tracking-tight">¿Qué querés ver?</h1>
       <ClinicFilterNote />
+      <LinkParaPacientes />
       <div className="mt-8 grid gap-4 sm:grid-cols-2">
         <Link
           href="/admin/tableros"

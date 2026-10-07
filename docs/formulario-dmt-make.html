@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Formulario DMT y conexión a Make</title>
+  <style>
+    body { font-family: "Segoe UI", sans-serif; color: #0f172a; margin: 48px; line-height: 1.45; }
+    h1 { font-size: 26px; margin-bottom: 4px; }
+    h2 { font-size: 16px; margin-top: 28px; }
+    p, li { font-size: 13px; }
+    .meta { color: #475569; font-size: 12px; margin-bottom: 24px; }
+    code, pre { font-family: Consolas, monospace; font-size: 12px; }
+    pre { background: #f1f5f9; padding: 12px; border-radius: 8px; white-space: pre-wrap; }
+    ol, ul { padding-left: 20px; }
+    li { margin: 8px 0; }
+  </style>
+</head>
+<body>
+  <h1>Formulario DMT y conexión a Make</h1>
+  <p class="meta">Desarr · Procedimiento interno · Octubre 2026</p>
+  <p>DMT es el Diagnóstico de Madurez Tecnológica. En el sitio se llama también DET. La persona responde 7 preguntas, ve su nivel y, al confirmar, el sitio envía un solo registro.</p>
+
+  <h2>Dónde está el formulario</h2>
+  <ul>
+    <li>Página pública: <code>https://www.desarr.com/auditoria-tecnologica</code></li>
+    <li>Pantalla: <code>src/components/DET.tsx</code></li>
+    <li>Preguntas y puntajes: <code>src/lib/det-data.ts</code></li>
+    <li>Recepción: <code>POST https://www.desarr.com/api/det-submit</code></li>
+  </ul>
+  <p>El formulario no llama a Make mientras la persona escribe. El único envío es al aceptar el resultado, para que Make reciba un registro completo: respuestas, recomendaciones y si quiere que lo contacte un asesor.</p>
+
+  <h2>Qué hace el sitio al confirmar</h2>
+  <ol>
+    <li>Valida nombre, empresa, correo, teléfono, país, provincia, tipos de empresa, las 7 respuestas, el puntaje y el nivel.</li>
+    <li>Intenta agregar una fila en Google Sheets, hoja <code>DET</code>, columnas A a Z. El rango se puede cambiar con <code>GOOGLE_SHEETS_DET_RANGE</code>.</li>
+    <li>Envía el mismo diagnóstico en JSON al webhook de Make, variable <code>MAKE_WEBHOOK_URL</code>.</li>
+  </ol>
+  <p>Alcanza con que uno de los dos destinos responda bien. Si Sheets y Make fallan, el sitio avisa al administrador por correo y la persona ve un error.</p>
+
+  <h2>Conectar Make</h2>
+  <ol>
+    <li>En Make, crear un escenario nuevo.</li>
+    <li>El primer módulo es <strong>Webhooks → Custom webhook</strong>. Crear un webhook y copiar la URL. Empieza con <code>https://hook.</code> y pertenece a Make.</li>
+    <li>Dejar el escenario en <strong>ON</strong>. Si está apagado, el sitio recibe error y no guarda el lead por ese camino.</li>
+    <li>En Vercel, proyecto <code>desarr-web</code> → Settings → Environment Variables → Production, cargar:
+<pre>MAKE_WEBHOOK_URL = la URL del webhook</pre>
+      Tipo Secret. No usar la variable del registro de socios: el DMT lee solo <code>MAKE_WEBHOOK_URL</code>. El registro usa <code>MAKE_REGISTRO_WEBHOOK_URL</code> y, si esa no existe, cae en la misma <code>MAKE_WEBHOOK_URL</code>.</li>
+    <li>Redeploy de Production en la rama <code>master</code>. Sin redeploy, el sitio sigue sin la URL nueva.</li>
+    <li>Completar el diagnóstico en <code>/auditoria-tecnologica</code> hasta aceptar el resultado. En Make tiene que aparecer una ejecución con el JSON.</li>
+  </ol>
+
+  <h2>Qué llega a Make</h2>
+  <p>El cuerpo es JSON. Los campos que el escenario puede mapear son:</p>
+  <ul>
+    <li><code>type</code>: siempre <code>det</code></li>
+    <li><code>timestamp</code></li>
+    <li><code>lead</code>: fullName, company, email, phone, country, state, companyTypes</li>
+    <li><code>diagnostic.totalScore</code> y <code>diagnostic.maturityLevel</code></li>
+    <li><code>recommendations</code></li>
+    <li><code>solicitaAsesor</code>: <code>SÍ</code> o <code>NO</code></li>
+    <li><code>answersFlat</code>: q1_registros a q7_escalamiento, con el texto de la opción elegida</li>
+  </ul>
+
+  <h2>Prueba automática</h2>
+  <p>GitHub Actions corre <code>npm run test:dmt-smoke</code> los lunes y jueves a las 09:00 ART, y también se puede disparar a mano. Postea a <code>https://www.desarr.com/api/det-submit</code> con el correo <code>prueba_automatica@dmt.com</code>. Si falla, manda un correo usando <code>RESEND_API_KEY</code> y <code>ADMIN_NOTIFY_EMAIL</code>.</p>
+
+  <h2>Si no llega a Make</h2>
+  <ul>
+    <li>El escenario está apagado o el webhook se regeneró y la URL de Vercel quedó vieja.</li>
+    <li>No se hizo redeploy después de guardar <code>MAKE_WEBHOOK_URL</code>.</li>
+    <li>La variable está solo en Preview y el formulario público usa Production.</li>
+    <li>El correo de alerta <code>[Desarr] Falló envío a Make (det)</code> trae el estado HTTP que respondió Make.</li>
+  </ul>
+</body>
+</html>

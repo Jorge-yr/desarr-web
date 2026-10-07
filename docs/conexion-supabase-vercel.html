@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Conexión de Supabase con Vercel</title>
+  <style>
+    body { font-family: "Segoe UI", sans-serif; color: #0f172a; margin: 48px; line-height: 1.45; }
+    h1 { font-size: 26px; margin-bottom: 4px; }
+    h2 { font-size: 16px; margin-top: 28px; }
+    p, li { font-size: 13px; }
+    .meta { color: #475569; font-size: 12px; margin-bottom: 24px; }
+    code, pre { font-family: Consolas, monospace; font-size: 12px; }
+    pre { background: #f1f5f9; padding: 12px; border-radius: 8px; }
+    ol, ul { padding-left: 20px; }
+    li { margin: 8px 0; }
+  </style>
+</head>
+<body>
+  <h1>Conexión de Supabase con Vercel</h1>
+  <p class="meta">Desarr · Procedimiento interno · Proyecto desarr-web · Octubre 2026</p>
+  <p>El sitio lee Supabase solo en el servidor. No hace falta instalar la integración de Supabase dentro de Vercel. Esa integración crea otras variables y puede pisar las que ya usa el login.</p>
+
+  <h2>Dónde sacar cada dato en Supabase</h2>
+  <p>Proyecto: Clinex_DB. Referencia: <code>egiupfunbffmitgzvhme</code>.</p>
+  <ol>
+    <li>Abrir el proyecto en Supabase.</li>
+    <li>Ir a Project Settings → API Keys → pestaña <strong>Legacy anon, service_role API keys</strong>.</li>
+    <li>Copiar la clave marcada <strong>anon</strong> y <strong>public</strong>. Empieza con <code>eyJ</code>. Esa es la que va en Vercel.</li>
+    <li>No copiar la clave <strong>service_role</strong>. Esa salta la seguridad por fila y no se carga en el sitio.</li>
+    <li>La URL del proyecto no es la de Data API. No usar la que termina en <code>/rest/v1/</code>. La URL correcta es:
+
+<pre>https://egiupfunbffmitgzvhme.supabase.co</pre>
+    </li>
+  </ol>
+
+  <h2>Qué cargar en Vercel</h2>
+  <p>Proyecto <code>desarr-web</code> → Settings → Environment Variables. Entorno: <strong>Production</strong>. Tipo: Secret.</p>
+  <ul>
+    <li><code>SUPABASE_URL</code> = <code>https://egiupfunbffmitgzvhme.supabase.co</code></li>
+    <li><code>SUPABASE_ANON_KEY</code> = la clave anon public</li>
+  </ul>
+  <p>Los nombres van sin el prefijo <code>NEXT_PUBLIC_</code>. El login corre en el servidor y no necesita publicar esas variables en el navegador. El código también acepta los nombres con prefijo si ya existieran.</p>
+
+  <h2>Después de guardar</h2>
+  <ol>
+    <li>Redeploy del último deployment de Production, rama <code>master</code>.</li>
+    <li>Esperar a que el estado quede Ready.</li>
+    <li>Probar <code>https://www.desarr.com/login</code> con un usuario que exista en Authentication y tenga fila en <code>admin_usuarios</code>.</li>
+  </ol>
+  <p>Cambiar una variable no alcanza: el deploy que ya está publicado sigue con el valor anterior hasta el redeploy.</p>
+
+  <h2>Si el login dice que el correo o la clave están mal</h2>
+  <ul>
+    <li>Revisar que <code>SUPABASE_URL</code> no tenga <code>/rest/v1/</code> al final.</li>
+    <li>Revisar que la clave sea la anon, no la service_role.</li>
+    <li>Revisar que el usuario esté en el mismo proyecto Clinex_DB y que <strong>Confirmed at</strong> tenga fecha.</li>
+    <li>Crear el usuario desde Authentication → Add user, con Auto Confirm User. No depender del correo de reseteo si el navegador muestra error de proxy.</li>
+  </ul>
+</body>
+</html>

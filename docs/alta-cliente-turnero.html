@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Alta de un cliente del turnero</title>
+  <style>
+    body { font-family: "Segoe UI", sans-serif; color: #0f172a; margin: 48px; line-height: 1.45; }
+    h1 { font-size: 26px; margin-bottom: 4px; }
+    h2 { font-size: 16px; margin-top: 28px; }
+    p, li { font-size: 13px; }
+    .meta { color: #475569; font-size: 12px; margin-bottom: 24px; }
+    code, pre { font-family: Consolas, monospace; font-size: 12px; }
+    pre { background: #f1f5f9; padding: 12px; border-radius: 8px; }
+    ol { padding-left: 20px; }
+    li { margin: 8px 0; }
+  </style>
+</head>
+<body>
+  <h1>Alta de un cliente del turnero</h1>
+  <p class="meta">Desarr · Procedimiento interno · Octubre 2026</p>
+  <p>Cada cliente nuevo es una clínica. El sitio y las variables de Vercel no se modifican. El trabajo es dejar la clínica en la base y darle un usuario de administrador.</p>
+
+  <h2>Una sola vez en el proyecto</h2>
+  <p>Ejecutar en el SQL Editor de Supabase el archivo <code>supabase/migrations/20261006020000_lectura_publica_turnero.sql</code>. Abre la lectura pública del nombre de la clínica, los profesionales y los horarios. No abre pacientes ni turnos. No se repite por cada cliente.</p>
+
+  <h2>Por cada clínica nueva</h2>
+  <ol>
+    <li>Confirmar que existe una fila en <code>maestro_administradores</code> con un <code>id_clinica</code> propio. Si la clínica ya se migró desde AppSheet, esa fila ya está.</li>
+    <li>Confirmar que sus profesionales están en <code>profesionales</code>, con ese mismo <code>id_clinica</code>, y con las columnas <code>nombre_completo</code> y <code>apellido_completo</code>.</li>
+    <li>En Supabase, ir a Authentication → Users → Add user. Cargar el correo de quien administra, una clave y marcar Auto Confirm User.</li>
+    <li>Copiar el User UID y ejecutar en el SQL Editor:
+
+<pre>insert into public.admin_usuarios (user_id, id_clinica, email)
+values (
+  'PEGAR_USER_UID',
+  'PEGAR_ID_CLINICA',
+  'correo@clinica.com'
+);</pre>
+    </li>
+    <li>Enviar a la clínica <code>https://www.desarr.com/login</code>, el correo y la clave. Al entrar ve solo su clínica.</li>
+    <li>La clínica copia <strong>Link para tus pacientes</strong> en el panel y lo publica en Instagram o WhatsApp. La dirección es <code>/c/</code> más su <code>id_clinica</code>.</li>
+    <li>Dentro del panel configura duración del turno, días hacia adelante, importe de seña y la grilla semanal. Sin eso el link abre, pero no ofrece horarios.</li>
+  </ol>
+
+  <h2>Qué no hacer</h2>
+  <ul>
+    <li>No cargar la clave <code>service_role</code> en Vercel.</li>
+    <li>No crear el usuario solo con SQL si Authentication puede crearlo desde el panel.</li>
+    <li>No buscar al paciente por DNI en todas las clínicas. El link ya trae la clínica.</li>
+  </ul>
+</body>
+</html>
