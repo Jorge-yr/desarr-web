@@ -16,6 +16,8 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
   const [apellido, setApellido] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [nuevo, setNuevo] = useState(false);
+  const [pagando, setPagando] = useState(false);
+  const [errorPago, setErrorPago] = useState("");
 
   const profesional = clinica.profesionales.find((p) => p.id === profId);
   const huecos = clinica.huecos[profId] ?? [];
@@ -43,6 +45,38 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
     }
     setNuevo(true);
     setPaso("datos");
+  }
+
+  async function pagar() {
+    setPagando(true);
+    setErrorPago("");
+    try {
+      const response = await fetch("/api/mercadopago/preferencia", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          idClinica: clinica.idClinica,
+          idProfesional: profId,
+          profesional: profesional?.nombre,
+          inicio: slot,
+          dni,
+          nombre,
+          apellido,
+          whatsapp,
+          importe: clinica.senaArs,
+        }),
+      });
+      const data = (await response.json()) as { initPoint?: string; error?: string };
+      if (!response.ok || !data.initPoint) {
+        setErrorPago(data.error ?? "No se pudo abrir Mercado Pago.");
+        setPagando(false);
+        return;
+      }
+      window.location.href = data.initPoint;
+    } catch {
+      setErrorPago("No se pudo abrir Mercado Pago.");
+      setPagando(false);
+    }
   }
 
   return (
@@ -176,9 +210,20 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
             </p>
           )}
           <p className="mt-4 text-sm text-slate-500">
-            Seña {clinica.senaArs > 0 ? `ARS ${clinica.senaArs}` : "a confirmar"}. El pago con Mercado Pago es el
-            siguiente paso. El turno queda pendiente hasta que la seña se acredite.
+            Seña {clinica.senaArs > 0 ? `ARS ${clinica.senaArs}` : "sin importe configurado"}. El turno queda
+            pendiente hasta que Mercado Pago acredite la seña.
           </p>
+          {clinica.senaArs > 0 && (
+            <button
+              type="button"
+              onClick={pagar}
+              disabled={pagando}
+              className="mt-4 w-full rounded-lg bg-teal-700 px-4 py-3 text-sm font-semibold text-white disabled:opacity-60"
+            >
+              {pagando ? "Abriendo Mercado Pago…" : "Pagar seña"}
+            </button>
+          )}
+          {errorPago && <p className="mt-3 text-sm text-red-700">{errorPago}</p>}
         </section>
       )}
     </main>
