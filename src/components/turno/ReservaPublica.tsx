@@ -5,8 +5,6 @@ import type { ClinicaPublica } from "@/lib/supabase/public-clinic";
 
 type Paso = "profesional" | "horario" | "dni" | "datos" | "listo";
 
-const CONOCIDOS = new Set(["30111222"]);
-
 export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
   const [paso, setPaso] = useState<Paso>("profesional");
   const [profId, setProfId] = useState("");
@@ -16,6 +14,9 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
   const [apellido, setApellido] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [nuevo, setNuevo] = useState(false);
+  const [idTurno, setIdTurno] = useState("");
+  const [guardando, setGuardando] = useState(false);
+  const [errorTurno, setErrorTurno] = useState("");
   const [pagando, setPagando] = useState(false);
   const [errorPago, setErrorPago] = useState("");
 
@@ -35,16 +36,48 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
     return [...groups.entries()];
   }, [huecos]);
 
-  function seguirDni() {
+  async function reservar(datosNuevos: boolean) {
     const limpio = dni.replace(/\D/g, "");
-    if (limpio.length < 7) return;
-    if (CONOCIDOS.has(limpio)) {
-      setNuevo(false);
+    if (limpio.length < 7 || !slot) return;
+    setGuardando(true);
+    setErrorTurno("");
+    try {
+      const response = await fetch("/api/turno/reservar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          idClinica: clinica.idClinica,
+          idProfesional: profId,
+          inicio: slot,
+          duracionMin: clinica.duracionMin,
+          dni: limpio,
+          nombre: datosNuevos ? nombre : "",
+          apellido: datosNuevos ? apellido : "",
+          whatsapp: datosNuevos ? whatsapp : "",
+        }),
+      });
+      const data = (await response.json()) as { idTurno?: string; needsData?: boolean; error?: string };
+      if (data.needsData) {
+        setNuevo(true);
+        setPaso("datos");
+        return;
+      }
+      if (!response.ok || !data.idTurno) {
+        setErrorTurno(data.error ?? "No se pudo guardar el turno.");
+        return;
+      }
+      setNuevo(datosNuevos);
+      setIdTurno(data.idTurno);
       setPaso("listo");
-      return;
+    } catch {
+      setErrorTurno("No se pudo guardar el turno.");
+    } finally {
+      setGuardando(false);
     }
-    setNuevo(true);
-    setPaso("datos");
+  }
+
+  function seguirDni() {
+    void reservar(false);
   }
 
   async function pagar() {
@@ -64,6 +97,7 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
           apellido,
           whatsapp,
           importe: clinica.senaArs,
+          idTurno,
         }),
       });
       const data = (await response.json()) as { initPoint?: string; error?: string };
@@ -159,10 +193,12 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
           <button
             type="button"
             onClick={seguirDni}
-            className="mt-4 w-full rounded-lg bg-teal-700 px-4 py-3 text-sm font-semibold text-white"
+            disabled={guardando}
+            className="mt-4 w-full rounded-lg bg-teal-700 px-4 py-3 text-sm font-semibold text-white disabled:opacity-60"
           >
-            Continuar
+            {guardando ? "Guardando turno…" : "Continuar"}
           </button>
+          {errorTurno && <p className="mt-3 text-sm text-red-700">{errorTurno}</p>}
         </section>
       )}
 
@@ -189,12 +225,13 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
           />
           <button
             type="button"
-            disabled={!nombre.trim() || !apellido.trim() || whatsapp.trim().length < 8}
-            onClick={() => setPaso("listo")}
+            disabled={!nombre.trim() || !apellido.trim() || whatsapp.trim().length < 8 || guardando}
+            onClick={() => void reservar(true)}
             className="rounded-lg bg-teal-700 px-4 py-3 text-sm font-semibold text-white disabled:opacity-50"
           >
-            Continuar
+            {guardando ? "Guardando turno…" : "Continuar"}
           </button>
+          {errorTurno && <p className="text-sm text-red-700">{errorTurno}</p>}
         </section>
       )}
 
@@ -217,7 +254,7 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
             <button
               type="button"
               onClick={pagar}
-              disabled={pagando}
+              disabled={pagando || !idTurno}
               className="mt-4 w-full rounded-lg bg-teal-700 px-4 py-3 text-sm font-semibold text-white disabled:opacity-60"
             >
               {pagando ? "Abriendo Mercado Pago…" : "Pagar seña"}

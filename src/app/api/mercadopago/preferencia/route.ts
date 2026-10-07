@@ -10,6 +10,7 @@ type Body = {
   nombre?: string;
   apellido?: string;
   whatsapp?: string;
+  idTurno?: string;
   importe?: number;
 };
 
@@ -21,7 +22,7 @@ export async function POST(request: Request) {
   const body = (await request.json()) as Body;
   const importe = Number(body.importe);
   const dni = String(body.dni ?? "").replace(/\D/g, "");
-  if (!body.idClinica || !body.idProfesional || !body.inicio || dni.length < 7 || !Number.isFinite(importe) || importe <= 0) {
+  if (!body.idClinica || !body.idProfesional || !body.inicio || !body.idTurno || dni.length < 7 || !Number.isFinite(importe) || importe <= 0) {
     return NextResponse.json({ error: "Faltan datos de la seña." }, { status: 400 });
   }
 
@@ -42,6 +43,7 @@ export async function POST(request: Request) {
       nombre: body.nombre ?? "",
       apellido: body.apellido ?? "",
       whatsapp: body.whatsapp ?? "",
+      id_turno: body.idTurno,
     },
     successUrl: `${vuelta.toString()}&resultado=aprobado`,
     failureUrl: `${vuelta.toString()}&resultado=rechazado`,

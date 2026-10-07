@@ -48,5 +48,15 @@ export async function POST(request: Request) {
   );
 
   if (error) console.error("[Mercado Pago] No se guardó la seña:", error.message);
+
+  if (pago.status === "approved" && reserva.id_turno) {
+    const confirmado = await supabase
+      .from("historial_turnos")
+      .update({ estado_turno: "Confirmado con Seña" })
+      .eq("id_turno", reserva.id_turno)
+      .eq("id_clinica", reserva.id_clinica);
+    if (confirmado.error) console.error("[Mercado Pago] No se confirmó el turno:", confirmado.error.message);
+  }
+
   return NextResponse.json({ ok: true });
 }
