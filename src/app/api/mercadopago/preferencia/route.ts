@@ -6,6 +6,8 @@ type Body = {
   idClinica?: string;
   idProfesional?: string;
   profesional?: string;
+  clinica?: string;
+  duracionMin?: number;
   inicio?: string;
   dni?: string;
   nombre?: string;
@@ -32,6 +34,10 @@ export async function POST(request: Request) {
   const origen = new URL(request.url).origin;
   const vuelta = new URL(`/c/${body.idClinica}/pago`, origen);
   vuelta.searchParams.set("ref", referencia);
+  vuelta.searchParams.set("inicio", body.inicio);
+  vuelta.searchParams.set("min", String(Number(body.duracionMin) > 0 ? Number(body.duracionMin) : 30));
+  if (body.profesional) vuelta.searchParams.set("pro", body.profesional);
+  if (body.clinica) vuelta.searchParams.set("cli", body.clinica);
 
   const initPoint = await crearPreferencia({
     accessToken,

@@ -91,6 +91,8 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
           idClinica: clinica.idClinica,
           idProfesional: profId,
           profesional: profesional?.nombre,
+          clinica: clinica.nombre,
+          duracionMin: clinica.duracionMin,
           inicio: slot,
           dni,
           nombre,
