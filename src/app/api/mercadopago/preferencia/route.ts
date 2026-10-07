@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { crearPreferencia, isMercadoPagoConfigured } from "@/lib/mercadopago";
+import { tokenDeClinica } from "@/lib/cobro";
+import { crearPreferencia } from "@/lib/mercadopago";
 
 type Body = {
   idClinica?: string;
@@ -15,15 +16,16 @@ type Body = {
 };
 
 export async function POST(request: Request) {
-  if (!isMercadoPagoConfigured()) {
-    return NextResponse.json({ error: "Mercado Pago no está configurado." }, { status: 503 });
-  }
-
   const body = (await request.json()) as Body;
   const importe = Number(body.importe);
   const dni = String(body.dni ?? "").replace(/\D/g, "");
   if (!body.idClinica || !body.idProfesional || !body.inicio || !body.idTurno || dni.length < 7 || !Number.isFinite(importe) || importe <= 0) {
     return NextResponse.json({ error: "Faltan datos de la seña." }, { status: 400 });
+  }
+
+  const accessToken = await tokenDeClinica(body.idClinica);
+  if (!accessToken) {
+    return NextResponse.json({ error: "Esta clínica todavía no conectó Mercado Pago." }, { status: 503 });
   }
 
   const referencia = crypto.randomUUID();
@@ -32,6 +34,7 @@ export async function POST(request: Request) {
   vuelta.searchParams.set("ref", referencia);
 
   const initPoint = await crearPreferencia({
+    accessToken,
     titulo: `Seña de turno · ${body.profesional || "Profesional"}`,
     importe,
     externalReference: referencia,

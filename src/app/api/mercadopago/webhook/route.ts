@@ -1,20 +1,25 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { isMercadoPagoConfigured, obtenerPago } from "@/lib/mercadopago";
+import { tokenPorCuentaExterna } from "@/lib/cobro";
+import { obtenerPago } from "@/lib/mercadopago";
 
 export async function POST(request: Request) {
-  if (!isMercadoPagoConfigured()) {
-    return NextResponse.json({ ok: true });
-  }
-
   const url = new URL(request.url);
-  const body = (await request.json().catch(() => ({}))) as { data?: { id?: string }; type?: string };
+  const body = (await request.json().catch(() => ({}))) as {
+    data?: { id?: string };
+    type?: string;
+    user_id?: string | number;
+  };
   const paymentId = body.data?.id || url.searchParams.get("data.id") || url.searchParams.get("id");
   if (!paymentId || (body.type && body.type !== "payment")) {
     return NextResponse.json({ ok: true });
   }
 
-  const pago = await obtenerPago(String(paymentId));
+  const cuenta = String(body.user_id || url.searchParams.get("user_id") || "");
+  const accessToken = await tokenPorCuentaExterna("mercadopago", cuenta);
+  if (!accessToken) return NextResponse.json({ ok: true });
+
+  const pago = await obtenerPago(accessToken, String(paymentId));
   if (!pago) return NextResponse.json({ ok: true });
 
   const reserva = pago.metadata ?? {};

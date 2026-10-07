@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ClinicFilterNote } from "@/components/admin/ClinicFilterNote";
+import { CuentaCobro } from "@/components/admin/CuentaCobro";
 import { LinkParaPacientes } from "@/components/admin/LinkParaPacientes";
 
 export const metadata: Metadata = {
@@ -36,6 +37,7 @@ export default function AdminHomePage() {
           </p>
         </Link>
       </div>
+      <CuentaCobro />
     </main>
   );
 }

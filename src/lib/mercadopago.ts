@@ -1,4 +1,5 @@
 type PreferenciaInput = {
+  accessToken: string;
   titulo: string;
   importe: number;
   externalReference: string;
@@ -9,15 +10,11 @@ type PreferenciaInput = {
   notificationUrl: string;
 };
 
-export function isMercadoPagoConfigured() {
-  return Boolean(process.env.MERCADOPAGO_ACCESS_TOKEN);
-}
-
 export async function crearPreferencia(input: PreferenciaInput) {
   const response = await fetch("https://api.mercadopago.com/checkout/preferences", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${process.env.MERCADOPAGO_ACCESS_TOKEN}`,
+      Authorization: `Bearer ${input.accessToken}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
@@ -48,9 +45,18 @@ export async function crearPreferencia(input: PreferenciaInput) {
   return body.init_point;
 }
 
-export async function obtenerPago(paymentId: string) {
+export async function cuentaMercadoPago(accessToken: string) {
+  const response = await fetch("https://api.mercadopago.com/users/me", {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!response.ok) return null;
+  const body = (await response.json()) as { id?: number };
+  return body.id ? String(body.id) : null;
+}
+
+export async function obtenerPago(accessToken: string, paymentId: string) {
   const response = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
-    headers: { Authorization: `Bearer ${process.env.MERCADOPAGO_ACCESS_TOKEN}` },
+    headers: { Authorization: `Bearer ${accessToken}` },
   });
   if (!response.ok) return null;
   return (await response.json()) as {
