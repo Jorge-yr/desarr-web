@@ -13,6 +13,7 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
   const [nombre, setNombre] = useState("");
   const [apellido, setApellido] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
+  const [nacimiento, setNacimiento] = useState("");
   const [nuevo, setNuevo] = useState(false);
   const [idTurno, setIdTurno] = useState("");
   const [guardando, setGuardando] = useState(false);
@@ -58,6 +59,7 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
           nombre: datosNuevos ? nombre : "",
           apellido: datosNuevos ? apellido : "",
           whatsapp: datosNuevos ? whatsapp : "",
+          nacimiento: datosNuevos ? nacimiento : "",
         }),
       });
       const data = (await response.json()) as { idTurno?: string; needsData?: boolean; error?: string };
@@ -229,9 +231,19 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
             onChange={(e) => setWhatsapp(e.target.value)}
             className="rounded-lg border border-slate-300 bg-white px-3 py-3"
           />
+          <label className="flex flex-col gap-1 text-sm text-slate-600">
+            <span>Fecha de nacimiento</span>
+            <input
+              type="date"
+              value={nacimiento}
+              max={new Date().toISOString().slice(0, 10)}
+              onChange={(e) => setNacimiento(e.target.value)}
+              className="rounded-lg border border-slate-300 bg-white px-3 py-3"
+            />
+          </label>
           <button
             type="button"
-            disabled={!nombre.trim() || !apellido.trim() || whatsapp.trim().length < 8 || guardando}
+            disabled={!nombre.trim() || !apellido.trim() || whatsapp.trim().length < 8 || !nacimiento || guardando}
             onClick={() => void reservar(true)}
             className="rounded-lg bg-teal-700 px-4 py-3 text-sm font-semibold text-white disabled:opacity-50"
           >
@@ -249,7 +261,7 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
           <p className="mt-2 text-sm">DNI {dni.replace(/\D/g, "")}</p>
           {nuevo && (
             <p className="text-sm">
-              {nombre} {apellido} · {whatsapp}
+              {nombre} {apellido} · {whatsapp} · {nacimiento}
             </p>
           )}
           <p className="mt-4 text-sm text-slate-500">
