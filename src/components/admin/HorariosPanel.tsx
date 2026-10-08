@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { LinkParaPacientes } from "@/components/admin/LinkParaPacientes";
 import { useAdminClinic } from "@/components/admin/AdminClinicContext";
+import { guardarConfiguracionTurnero, leerConfiguracionTurnero } from "@/app/admin/horarios/actions";
 
 const DAYS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"] as const;
 
@@ -51,7 +52,8 @@ function labelToIndex(label: string) {
 function paintRange(slots: boolean[][], day: number, desde: string, hasta: string) {
   const a = labelToIndex(desde);
   const b = labelToIndex(hasta);
-  for (let i = a; i < b; i++) slots[day][i] = true;
+  if (!Number.isFinite(a) || !Number.isFinite(b) || day < 0 || day >= slots.length) return;
+  for (let i = Math.max(0, a); i < Math.min(slots[day].length, b); i++) slots[day][i] = true;
 }
 
 function blocksFromSlots(slots: boolean[][]): Block[] {
@@ -105,18 +107,44 @@ export function HorariosPanel() {
     return next;
   });
   const [savedAt, setSavedAt] = useState<string | null>(null);
-  const [payload, setPayload] = useState<string | null>(null);
+  const [guardando, setGuardando] = useState(false);
+  const [errorGuardado, setErrorGuardado] = useState("");
   const drag = useRef<{ painting: boolean; active: boolean } | null>(null);
 
   useEffect(() => {
     if (professionals.length === 0) return;
-    const stored = loadAll(clinic.idClinica);
-    const next: Record<string, Config> = {};
-    for (const p of professionals) {
-      next[p.id] = stored[p.id] ?? defaultConfig();
-    }
-    setConfigs(next);
-    setProfId(professionals[0].id);
+    let cancelado = false;
+    void (async () => {
+      const stored = loadAll(clinic.idClinica);
+      const remoto = await leerConfiguracionTurnero();
+      if (cancelado) return;
+      const next: Record<string, Config> = {};
+      for (const p of professionals) {
+        const config = remoto.configs.find((c) => c.idProfesional === p.id);
+        const bloques = remoto.bloques.filter((b) => b.idProfesional === p.id);
+        if (config) {
+          const slots = emptySlots();
+          for (const bloque of bloques) {
+            const day = bloque.dia - 1;
+            if (day >= 0 && day < slots.length) paintRange(slots, day, bloque.desde, bloque.hasta);
+          }
+          next[p.id] = {
+            duracionMin: config.duracionMin,
+            diasAdelante: config.diasAdelante,
+            senaArs: config.senaArs,
+            slots,
+          };
+        } else {
+          next[p.id] = stored[p.id] ?? defaultConfig();
+        }
+      }
+      setConfigs(next);
+      setErrorGuardado(remoto.error ?? "");
+      setProfId((actual) => (professionals.some((p) => p.id === actual) ? actual : professionals[0].id));
+    })();
+    return () => {
+      cancelado = true;
+    };
   }, [clinic.idClinica, professionals]);
 
   const config = configs[profId] ?? defaultConfig();
@@ -166,26 +194,30 @@ export function HorariosPanel() {
     setSavedAt(null);
   }
 
-  function save() {
+  async function save() {
+    setGuardando(true);
+    setErrorGuardado("");
+    setSavedAt(null);
     const all = { ...configs, [profId]: config };
     localStorage.setItem(storageKey(clinic.idClinica), JSON.stringify(all));
     const bloques = blocksFromSlots(config.slots).map((b) => ({
-      dia_semana: b.dia + 1,
-      hora_desde: b.desde,
-      hora_hasta: b.hasta,
+      dia: b.dia + 1,
+      desde: b.desde,
+      hasta: b.hasta,
     }));
-    const body = {
-      id_clinica: clinic.idClinica,
-      id_profesional: profId,
-      duracion_turno_min: config.duracionMin,
-      dias_visibles: config.diasAdelante,
-      importe_sena_ars: config.senaArs,
+    const resultado = await guardarConfiguracionTurnero({
+      idProfesional: profId,
+      duracionMin: config.duracionMin,
+      diasAdelante: config.diasAdelante,
+      senaArs: config.senaArs,
       bloques,
-    };
-    setPayload(JSON.stringify(body, null, 2));
-    setSavedAt(
-      new Date().toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" }),
-    );
+    });
+    setGuardando(false);
+    if (resultado.error) {
+      setErrorGuardado(resultado.error);
+      return;
+    }
+    setSavedAt(new Date().toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" }));
   }
 
   const blocks = blocksFromSlots(config.slots);
@@ -220,7 +252,7 @@ export function HorariosPanel() {
               onChange={(e) => {
                 setProfId(e.target.value);
                 setSavedAt(null);
-                setPayload(null);
+                setErrorGuardado("");
               }}
             >
               {professionals.map((p) => (
@@ -276,16 +308,18 @@ export function HorariosPanel() {
           </div>
           <button
             type="button"
-            onClick={save}
-            className="mt-6 w-full rounded-lg bg-[#1D4ED8] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#1e40af]"
+            onClick={() => void save()}
+            disabled={guardando}
+            className="mt-6 w-full rounded-lg bg-[#1D4ED8] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#1e40af] disabled:opacity-60"
           >
-            Guardar configuración
+            {guardando ? "Guardando…" : "Guardar configuración"}
           </button>
           {savedAt && (
             <p className="mt-3 text-xs text-[#10B981]">
-              Guardada a las {savedAt}. En la versión conectada este payload escribe las tablas del profesional.
+              Guardada a las {savedAt} en Supabase. El paciente ya ve esta seña y estos horarios.
             </p>
           )}
+          {errorGuardado && <p className="mt-3 text-xs text-red-700">{errorGuardado}</p>}
         </section>
         <LinkParaPacientes className="mt-0" />
         </div>
@@ -361,12 +395,6 @@ export function HorariosPanel() {
           </div>
         </section>
       </main>
-
-      {payload && (
-        <pre className="mx-auto mb-8 max-w-6xl overflow-x-auto rounded-xl bg-[#0F172A] px-4 py-3 text-xs text-slate-100">
-          {payload}
-        </pre>
-      )}
     </div>
   );
 }

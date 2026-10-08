@@ -73,7 +73,7 @@ export async function POST(request: Request) {
     id_clinica: body.idClinica,
     fecha_hora: cuando.marca,
     hora_turno: cuando.hora,
-    tipo_movimiento: "Turno web",
+    tipo_movimiento: "Solicitud Turno",
   });
   if (movimiento.error) return NextResponse.json({ error: movimiento.error.message }, { status: 400 });
 

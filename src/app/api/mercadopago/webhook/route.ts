@@ -61,6 +61,83 @@ export async function POST(request: Request) {
       .eq("id_turno", reserva.id_turno)
       .eq("id_clinica", reserva.id_clinica);
     if (confirmado.error) console.error("[Mercado Pago] No se confirmó el turno:", confirmado.error.message);
+
+    const { data: turno } = await supabase
+      .from("historial_turnos")
+      .select("id_paciente, id_profesional")
+      .eq("id_turno", reserva.id_turno)
+      .eq("id_clinica", reserva.id_clinica)
+      .maybeSingle();
+
+    const { data: profesional } = turno?.id_profesional
+      ? await supabase
+          .from("profesionales")
+          .select("id_clinica")
+          .eq("id_profesional", turno.id_profesional)
+          .maybeSingle()
+      : { data: null };
+    const idClinica = profesional?.id_clinica || reserva.id_clinica;
+
+    const idCobro = `mp-${pago.id}`;
+    const { data: yaCobrado } = await supabase.from("historial_cobros").select("id_cobro").eq("id_cobro", idCobro).maybeSingle();
+    const { data: medios } = await supabase
+      .from("medios_cobro")
+      .select("id_medio_cobro, tipo_medio_cobro, detalle_medio_cobro, cuotas, interes_a_aplicar, entidad_emisora")
+      .eq("id_clinica", idClinica);
+    const medio = (medios ?? []).find((row) =>
+      String(row.detalle_medio_cobro ?? "").replace(/\s+/g, "").toLowerCase() === "mercadopago",
+    );
+    if (turno?.id_paciente && !yaCobrado) {
+      const ahora = new Date();
+      const fecha = ahora.toLocaleDateString("en-CA", { timeZone: "America/Argentina/Buenos_Aires" });
+      const hora = ahora.toLocaleTimeString("en-GB", {
+        timeZone: "America/Argentina/Buenos_Aires",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+      });
+      const marca = `${fecha} ${hora}`;
+      const importe = pago.transaction_amount;
+      const interes = Number(medio?.interes_a_aplicar ?? 0);
+      const neto = Math.round(importe * (1 + interes) * 100) / 100;
+      const idTransaccion = crypto.randomUUID();
+      const movimiento = await supabase.from("movimientos").insert({
+        id_transaccion: idTransaccion,
+        id_paciente: turno.id_paciente,
+        id_profesional: turno.id_profesional,
+        id_clinica: idClinica,
+        fecha_hora: marca,
+        tipo_movimiento: "Solo Cobro",
+        medio_pago: medio?.tipo_medio_cobro ?? null,
+      });
+      if (movimiento.error) {
+        console.error("[Mercado Pago] No se creó el movimiento del cobro:", movimiento.error.message);
+      } else {
+        const cobro = await supabase.from("historial_cobros").insert({
+          id_cobro: idCobro,
+          id_transaccion: idTransaccion,
+          id_paciente: turno.id_paciente,
+          medio_cobro: medio?.tipo_medio_cobro ?? null,
+          medio_cobro_detalle: medio?.detalle_medio_cobro ?? null,
+          cuotas: medio?.cuotas ?? null,
+          fecha_mov_cobro: marca,
+          importe,
+          id_clinica: idClinica,
+          concepto_haber: "Otros",
+          importe_haber: importe,
+          id_medio_cobro: medio?.id_medio_cobro ?? null,
+          tipo_ingreso: "Solo Cobro",
+          controlado: false,
+          acreditado: true,
+          comentario: "Pago Automático rebido por Turnero en Mercado Pago",
+          interes_cobro: interes,
+          neto_mas_interes: neto,
+          entidad_emisora: medio?.entidad_emisora ?? null,
+        });
+        if (cobro.error) console.error("[Mercado Pago] No se registró el cobro:", cobro.error.message);
+      }
+    }
   }
 
   return NextResponse.json({ ok: true });
