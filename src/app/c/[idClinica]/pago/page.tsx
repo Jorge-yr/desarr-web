@@ -49,7 +49,7 @@ export default async function PagoSenaPage({
           href={`/api/turno/calendario?${agenda.toString()}`}
           className="mt-6 inline-block rounded-lg bg-teal-700 px-4 py-3 text-sm font-semibold text-white"
         >
-          Agregar a mi agenda
+          Guardar en mi agenda
         </a>
       )}
     </main>

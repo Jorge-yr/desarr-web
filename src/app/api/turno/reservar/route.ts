@@ -10,6 +10,7 @@ type Body = {
   nombre?: string;
   apellido?: string;
   whatsapp?: string;
+  nacimiento?: string;
 };
 
 function enArgentina(iso: string) {
@@ -45,7 +46,12 @@ export async function POST(request: Request) {
 
   let idPaciente = existente?.id_paciente as string | undefined;
   if (!idPaciente) {
-    if (!body.nombre?.trim() || !body.apellido?.trim()) {
+    const nacimiento = String(body.nacimiento ?? "").slice(0, 10);
+    const fechaOk =
+      /^\d{4}-\d{2}-\d{2}$/.test(nacimiento) &&
+      !Number.isNaN(new Date(`${nacimiento}T00:00:00`).getTime()) &&
+      nacimiento <= enArgentina(new Date().toISOString()).fecha;
+    if (!body.nombre?.trim() || !body.apellido?.trim() || !fechaOk) {
       return NextResponse.json({ needsData: true });
     }
     idPaciente = crypto.randomUUID();
@@ -54,6 +60,8 @@ export async function POST(request: Request) {
       dni,
       nombre: body.nombre.trim(),
       apellido: body.apellido.trim(),
+      fecha_nacimiento: nacimiento,
+      nacimiento: Number(nacimiento.slice(0, 4)),
       telefono_paciente: body.whatsapp?.trim() || null,
       id_clinica: body.idClinica,
       fecha_alta: enArgentina(new Date().toISOString()).fecha,

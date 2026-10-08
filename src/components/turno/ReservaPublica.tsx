@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ClinicaPublica } from "@/lib/supabase/public-clinic";
 
 type Paso = "profesional" | "horario" | "dni" | "datos" | "listo";
@@ -13,14 +13,18 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
   const [nombre, setNombre] = useState("");
   const [apellido, setApellido] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
+  const [nacimiento, setNacimiento] = useState("");
   const [nuevo, setNuevo] = useState(false);
   const [idTurno, setIdTurno] = useState("");
   const [guardando, setGuardando] = useState(false);
   const [errorTurno, setErrorTurno] = useState("");
   const [pagando, setPagando] = useState(false);
+  const [initPoint, setInitPoint] = useState("");
+  const [qrPago, setQrPago] = useState("");
   const [errorPago, setErrorPago] = useState("");
 
   const profesional = clinica.profesionales.find((p) => p.id === profId);
+  const sena = profesional?.senaArs ?? clinica.senaArs;
   const huecos = clinica.huecos[profId] ?? [];
   const elegido = huecos.find((h) => h.inicio === slot);
   const dias = useMemo(() => {
@@ -58,6 +62,7 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
           nombre: datosNuevos ? nombre : "",
           apellido: datosNuevos ? apellido : "",
           whatsapp: datosNuevos ? whatsapp : "",
+          nacimiento: datosNuevos ? nacimiento : "",
         }),
       });
       const data = (await response.json()) as { idTurno?: string; needsData?: boolean; error?: string };
@@ -84,40 +89,49 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
     void reservar(false);
   }
 
-  async function pagar() {
-    setPagando(true);
-    setErrorPago("");
-    try {
-      const response = await fetch("/api/mercadopago/preferencia", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          idClinica: clinica.idClinica,
-          idProfesional: profId,
-          profesional: profesional?.nombre,
-          clinica: clinica.nombre,
-          duracionMin: profesional?.duracionMin ?? clinica.duracionMin,
-          inicio: slot,
-          dni,
-          nombre,
-          apellido,
-          whatsapp,
-          importe: profesional?.senaArs ?? clinica.senaArs,
-          idTurno,
-        }),
-      });
-      const data = (await response.json()) as { initPoint?: string; error?: string };
-      if (!response.ok || !data.initPoint) {
-        setErrorPago(data.error ?? "No se pudo abrir Mercado Pago.");
-        setPagando(false);
-        return;
+  useEffect(() => {
+    if (paso !== "listo" || sena <= 0 || !idTurno || initPoint) return;
+    let cancelado = false;
+    void (async () => {
+      setPagando(true);
+      setErrorPago("");
+      try {
+        const response = await fetch("/api/mercadopago/preferencia", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            idClinica: clinica.idClinica,
+            idProfesional: profId,
+            profesional: profesional?.nombre,
+            clinica: clinica.nombre,
+            duracionMin: profesional?.duracionMin ?? clinica.duracionMin,
+            inicio: slot,
+            dni,
+            nombre,
+            apellido,
+            whatsapp,
+            importe: sena,
+            idTurno,
+          }),
+        });
+        const data = (await response.json()) as { initPoint?: string; qr?: string; error?: string };
+        if (cancelado) return;
+        if (!response.ok || !data.initPoint) {
+          setErrorPago(data.error ?? "No se pudo preparar el pago.");
+          return;
+        }
+        setInitPoint(data.initPoint);
+        setQrPago(data.qr ?? "");
+      } catch {
+        if (!cancelado) setErrorPago("No se pudo preparar el pago.");
+      } finally {
+        if (!cancelado) setPagando(false);
       }
-      window.location.href = data.initPoint;
-    } catch {
-      setErrorPago("No se pudo abrir Mercado Pago.");
-      setPagando(false);
-    }
-  }
+    })();
+    return () => {
+      cancelado = true;
+    };
+  }, [paso, sena, idTurno, initPoint, clinica.idClinica, clinica.nombre, profId, profesional?.nombre, profesional?.duracionMin, clinica.duracionMin, slot, dni, nombre, apellido, whatsapp]);
 
   return (
     <main className="mx-auto min-h-full max-w-lg bg-slate-100 px-4 py-8 text-slate-900">
@@ -229,9 +243,19 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
             onChange={(e) => setWhatsapp(e.target.value)}
             className="rounded-lg border border-slate-300 bg-white px-3 py-3"
           />
+          <label className="flex flex-col gap-1 text-sm text-slate-600">
+            <span>Fecha de nacimiento</span>
+            <input
+              type="date"
+              value={nacimiento}
+              max={new Date().toISOString().slice(0, 10)}
+              onChange={(e) => setNacimiento(e.target.value)}
+              className="rounded-lg border border-slate-300 bg-white px-3 py-3"
+            />
+          </label>
           <button
             type="button"
-            disabled={!nombre.trim() || !apellido.trim() || whatsapp.trim().length < 8 || guardando}
+            disabled={!nombre.trim() || !apellido.trim() || whatsapp.trim().length < 8 || !nacimiento || guardando}
             onClick={() => void reservar(true)}
             className="rounded-lg bg-teal-700 px-4 py-3 text-sm font-semibold text-white disabled:opacity-50"
           >
@@ -249,22 +273,34 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
           <p className="mt-2 text-sm">DNI {dni.replace(/\D/g, "")}</p>
           {nuevo && (
             <p className="text-sm">
-              {nombre} {apellido} · {whatsapp}
+              {nombre} {apellido} · {whatsapp} · {nacimiento}
             </p>
           )}
           <p className="mt-4 text-sm text-slate-500">
-            Seña {(profesional?.senaArs ?? clinica.senaArs) > 0 ? `ARS ${profesional?.senaArs ?? clinica.senaArs}` : "sin importe configurado"}. El turno queda
-            pendiente hasta que Mercado Pago acredite la seña.
+            Seña {sena > 0 ? `ARS ${sena}` : "sin importe configurado"}. El turno queda pendiente hasta que Mercado
+            Pago acredite la seña.
           </p>
-          {(profesional?.senaArs ?? clinica.senaArs) > 0 && (
-            <button
-              type="button"
-              onClick={pagar}
-              disabled={pagando || !idTurno}
-              className="mt-4 w-full rounded-lg bg-teal-700 px-4 py-3 text-sm font-semibold text-white disabled:opacity-60"
-            >
-              {pagando ? "Abriendo Mercado Pago…" : "Pagar seña"}
-            </button>
+          {sena > 0 && (
+            <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center">
+              {initPoint ? (
+                <a
+                  href={initPoint}
+                  className="rounded-lg bg-teal-700 px-4 py-3 text-center text-sm font-semibold text-white"
+                >
+                  Pagar seña
+                </a>
+              ) : (
+                <p className="text-sm text-slate-500">{pagando ? "Preparando Mercado Pago…" : "El pago no está listo."}</p>
+              )}
+              {qrPago && (
+                <img src={qrPago} alt="QR para pagar la seña con el celular" className="h-36 w-36 rounded-lg bg-white" />
+              )}
+            </div>
+          )}
+          {qrPago && (
+            <p className="mt-3 text-xs text-slate-500">
+              Si estás en una computadora, escaneá el QR con el celular. El pago entra en la cuenta de Mercado Pago de la clínica.
+            </p>
           )}
           {errorPago && <p className="mt-3 text-sm text-red-700">{errorPago}</p>}
         </section>

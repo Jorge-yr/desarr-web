@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import QRCode from "qrcode";
 import { tokenDeClinica } from "@/lib/cobro";
 import { crearPreferencia } from "@/lib/mercadopago";
 
@@ -60,5 +61,6 @@ export async function POST(request: Request) {
     notificationUrl: `${origen}/api/mercadopago/webhook`,
   });
 
-  return NextResponse.json({ initPoint });
+  const qr = await QRCode.toDataURL(initPoint, { margin: 1, width: 280 });
+  return NextResponse.json({ initPoint, qr });
 }
