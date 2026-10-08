@@ -35,17 +35,17 @@ export function CuentaCobro() {
   }
 
   return (
-    <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Cuentas de cobro</p>
-      <h2 className="mt-2 text-lg font-semibold">Mercado Pago</h2>
-      <p className="mt-2 text-sm text-slate-500">
+    <section className="mt-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+      <p className="text-xs font-medium uppercase tracking-wide text-[#1D4ED8]">Cuentas de cobro</p>
+      <h2 className="mt-2 text-lg font-semibold text-[#0F172A]">Mercado Pago</h2>
+      <p className="mt-2 text-sm text-slate-600">
         Pegá el Access Token de la cuenta donde esta clínica quiere recibir las señas. El token no se vuelve a mostrar.
       </p>
       <p className="mt-3 text-sm">
         {conectada ? (
-          <span className="font-medium text-teal-800">Conectada{cuenta ? ` · cuenta ${cuenta}` : ""}</span>
+          <span className="font-medium text-[#10B981]">Conectada{cuenta ? ` · cuenta ${cuenta}` : ""}</span>
         ) : (
-          <span className="text-slate-500">Sin conectar</span>
+          <span className="text-slate-600">Sin conectar</span>
         )}
       </p>
       <label className="mt-4 flex flex-col gap-1 text-sm">
@@ -55,18 +55,18 @@ export function CuentaCobro() {
           autoComplete="off"
           value={token}
           onChange={(e) => setToken(e.target.value)}
-          className="rounded-lg border border-slate-300 bg-white px-3 py-3"
+          className="rounded-lg border border-slate-300 bg-white px-3 py-3 text-[#0F172A]"
         />
       </label>
       <button
         type="button"
         onClick={() => void guardar()}
         disabled={guardando || token.trim().length < 20}
-        className="mt-4 rounded-lg bg-teal-700 px-4 py-3 text-sm font-semibold text-white disabled:opacity-50"
+        className="mt-4 rounded-lg bg-[#1D4ED8] px-4 py-3 text-sm font-semibold text-white hover:bg-[#1e40af] disabled:opacity-50"
       >
         {guardando ? "Verificando…" : "Guardar cuenta"}
       </button>
-      {mensaje && <p className="mt-3 text-sm text-teal-800">{mensaje}</p>}
+      {mensaje && <p className="mt-3 text-sm text-[#10B981]">{mensaje}</p>}
       {error && <p className="mt-3 text-sm text-red-700">{error}</p>}
     </section>
   );

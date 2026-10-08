@@ -15,20 +15,20 @@ const BOARDS = [
 export default function TablerosPage() {
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
-      <Link href="/admin" className="text-sm font-medium text-teal-800 hover:underline">
+      <Link href="/admin" className="text-sm font-medium text-[#1D4ED8] hover:underline">
         Volver al panel
       </Link>
-      <h1 className="mt-3 text-2xl font-semibold tracking-tight">Tableros del Negocio</h1>
-      <p className="mt-1 text-sm text-slate-500">motor Looker</p>
+      <h1 className="mt-3 text-2xl font-bold tracking-tight text-[#0F172A]">Tableros del Negocio</h1>
+      <p className="mt-1 text-sm text-[#1D4ED8]">motor Looker</p>
       <ClinicFilterNote />
       <div className="mt-8 grid gap-4">
         {BOARDS.map((board) => (
-          <article key={board.title} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div className="border-b border-slate-100 px-5 py-4">
-              <h2 className="font-semibold">{board.title}</h2>
-              <p className="mt-1 text-sm text-slate-500">{board.detail}</p>
+          <article key={board.title} className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+            <div className="border-b border-slate-200 px-5 py-4">
+              <h2 className="font-semibold text-[#0F172A]">{board.title}</h2>
+              <p className="mt-1 text-sm text-slate-600">{board.detail}</p>
             </div>
-            <div className="grid h-40 place-items-center bg-slate-50 text-sm text-slate-400">
+            <div className="grid h-40 place-items-center bg-slate-50 text-sm text-slate-500">
               Embed de Looker
             </div>
           </article>

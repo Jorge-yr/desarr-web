@@ -24,16 +24,20 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
   const huecos = clinica.huecos[profId] ?? [];
   const elegido = huecos.find((h) => h.inicio === slot);
   const dias = useMemo(() => {
-    const groups = new Map<string, typeof huecos>();
+    const groups = new Map<string, { label: string; items: typeof huecos }>();
     for (const hueco of huecos) {
-      const key = new Date(hueco.inicio).toLocaleDateString("es-AR", {
+      const date = new Date(hueco.inicio);
+      const key = date.toLocaleDateString("en-CA");
+      const label = date.toLocaleDateString("es-AR", {
         weekday: "short",
         day: "numeric",
         month: "short",
       });
-      groups.set(key, [...(groups.get(key) ?? []), hueco]);
+      const current = groups.get(key) ?? { label, items: [] };
+      current.items.push(hueco);
+      groups.set(key, current);
     }
-    return [...groups.entries()];
+    return [...groups.entries()].sort((a, b) => b[0].localeCompare(a[0]));
   }, [huecos]);
 
   async function reservar(datosNuevos: boolean) {
@@ -152,11 +156,11 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
           </p>
           <div className="mt-4 flex flex-col gap-4">
             {dias.length === 0 && <p className="text-sm text-slate-500">No hay horarios disponibles.</p>}
-            {dias.map(([dia, items]) => (
+            {dias.map(([dia, grupo]) => (
               <div key={dia}>
-                <p className="text-xs font-semibold uppercase text-slate-400">{dia}</p>
+                <p className="text-xs font-semibold uppercase text-slate-400">{grupo.label}</p>
                 <div className="mt-2 flex flex-wrap gap-2">
-                  {items.map((item) => (
+                  {grupo.items.map((item) => (
                     <button
                       key={item.inicio}
                       type="button"

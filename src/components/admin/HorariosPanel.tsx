@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { LinkParaPacientes } from "@/components/admin/LinkParaPacientes";
 import { useAdminClinic } from "@/components/admin/AdminClinicContext";
 
 const DAYS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"] as const;
@@ -191,30 +192,30 @@ export function HorariosPanel() {
   const prof = professionals.find((p) => p.id === profId) ?? professionals[0];
 
   if (!prof) {
-    return <p className="p-6 text-sm text-slate-600">Esta clínica no tiene profesionales cargados.</p>;
+    return <p className="p-6 text-sm text-slate-700">Esta clínica no tiene profesionales cargados.</p>;
   }
 
   return (
     <div
-      className="min-h-full bg-slate-100 text-slate-900"
+      className="min-h-full text-[#0F172A]"
       onPointerUp={endDrag}
       onPointerLeave={endDrag}
     >
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-6xl flex-wrap items-end justify-between gap-4 px-6 py-5">
           <div>
-            <Link href="/admin" className="text-xs font-semibold uppercase tracking-wide text-teal-700 hover:underline">
+            <Link href="/admin" className="text-xs font-medium uppercase tracking-wide text-[#1D4ED8] hover:underline">
               Panel · Gestionar turnero
             </Link>
-            <h1 className="text-2xl font-semibold tracking-tight">Gestión de horarios</h1>
-            <p className="mt-1 text-sm text-slate-500">
+            <h1 className="text-2xl font-bold tracking-tight">Gestión de horarios</h1>
+            <p className="mt-1 text-sm text-slate-600">
               Panel de control del profesional. Pintá los rangos en los que atiende.
             </p>
           </div>
           <label className="flex min-w-64 flex-col gap-1 text-sm">
-            <span className="font-medium text-slate-600">Profesional</span>
+            <span className="font-medium text-slate-700">Profesional</span>
             <select
-              className="rounded-lg border border-slate-300 bg-white px-3 py-2"
+              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-[#0F172A]"
               value={profId}
               onChange={(e) => {
                 setProfId(e.target.value);
@@ -232,10 +233,11 @@ export function HorariosPanel() {
         </div>
       </header>
 
-      <main className="mx-auto grid max-w-6xl gap-6 px-6 py-6 lg:grid-cols-[280px_1fr]">
-        <section className="h-fit rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="text-sm font-semibold text-slate-800">Reglas de negocio</h2>
-          <p className="mt-1 text-xs text-slate-500">{prof.nombre}</p>
+      <main className="mx-auto grid max-w-6xl gap-6 px-6 py-6 lg:grid-cols-[340px_1fr]">
+        <div className="flex flex-col gap-4">
+        <section className="h-fit rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h2 className="text-sm font-semibold text-[#0F172A]">Reglas de negocio</h2>
+          <p className="mt-1 text-xs text-slate-600">{prof.nombre}</p>
           <div className="mt-4 flex flex-col gap-4">
             <label className="flex flex-col gap-1 text-sm">
               <span>Duración del turno (minutos)</span>
@@ -244,7 +246,7 @@ export function HorariosPanel() {
                 min={5}
                 max={240}
                 step={5}
-                className="rounded-lg border border-slate-300 px-3 py-2"
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-[#0F172A]"
                 value={config.duracionMin}
                 onChange={(e) => update({ duracionMin: Number(e.target.value) })}
               />
@@ -255,7 +257,7 @@ export function HorariosPanel() {
                 type="number"
                 min={1}
                 max={180}
-                className="rounded-lg border border-slate-300 px-3 py-2"
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-[#0F172A]"
                 value={config.diasAdelante}
                 onChange={(e) => update({ diasAdelante: Number(e.target.value) })}
               />
@@ -266,7 +268,7 @@ export function HorariosPanel() {
                 type="number"
                 min={0}
                 step={100}
-                className="rounded-lg border border-slate-300 px-3 py-2"
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-[#0F172A]"
                 value={config.senaArs}
                 onChange={(e) => update({ senaArs: Number(e.target.value) })}
               />
@@ -275,21 +277,23 @@ export function HorariosPanel() {
           <button
             type="button"
             onClick={save}
-            className="mt-6 w-full rounded-lg bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-800"
+            className="mt-6 w-full rounded-lg bg-[#1D4ED8] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#1e40af]"
           >
             Guardar configuración
           </button>
           {savedAt && (
-            <p className="mt-3 text-xs text-teal-800">
+            <p className="mt-3 text-xs text-[#10B981]">
               Guardada a las {savedAt}. En la versión conectada este payload escribe las tablas del profesional.
             </p>
           )}
         </section>
+        <LinkParaPacientes className="mt-0" />
+        </div>
 
-        <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+        <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+          <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
             <h2 className="text-sm font-semibold">Semana de atención</h2>
-            <p className="text-xs text-slate-500">Clic o arrastre para pintar. Volvé a pintar para borrar.</p>
+            <p className="text-xs text-slate-600">Clic o arrastre para pintar. Volvé a pintar para borrar.</p>
           </div>
           <div className="overflow-x-auto">
             <div className="min-w-[720px] select-none p-3">
@@ -300,7 +304,7 @@ export function HorariosPanel() {
                     <p className="text-xs font-semibold">{day.slice(0, 3)}</p>
                     <button
                       type="button"
-                      className="text-[10px] text-slate-400 hover:text-slate-700"
+                      className="text-[10px] text-slate-500 hover:text-[#0F172A]"
                       onClick={() => clearDay(dayIndex)}
                     >
                       limpiar
@@ -324,7 +328,7 @@ export function HorariosPanel() {
                                 type="button"
                                 aria-label={`${day} ${minutesToLabel(START_MIN + index * STEP)}`}
                                 aria-pressed={on}
-                                className={`h-4 rounded-sm ${on ? "bg-teal-600" : "bg-slate-100 hover:bg-slate-200"}`}
+                                className={`h-4 rounded-sm ${on ? "bg-[#1D4ED8]" : "bg-slate-100 hover:bg-slate-200"}`}
                                 onPointerDown={() => onPointerDown(dayIndex, index)}
                                 onPointerEnter={() => onPointerEnter(dayIndex, index)}
                               />
@@ -338,8 +342,8 @@ export function HorariosPanel() {
               </div>
             </div>
           </div>
-          <div className="border-t border-slate-100 px-4 py-3">
-            <p className="text-xs font-medium text-slate-600">Rangos</p>
+          <div className="border-t border-slate-200 px-4 py-3">
+            <p className="text-xs font-medium text-slate-700">Rangos</p>
             {blocks.length === 0 ? (
               <p className="mt-1 text-xs text-slate-400">Sin horarios pintados.</p>
             ) : (
@@ -347,7 +351,7 @@ export function HorariosPanel() {
                 {blocks.map((b) => (
                   <li
                     key={`${b.dia}-${b.desde}`}
-                    className="rounded-full bg-teal-50 px-2.5 py-1 text-xs text-teal-900"
+                    className="rounded-full bg-[#1D4ED8]/10 px-2.5 py-1 text-xs font-medium text-[#1D4ED8]"
                   >
                     {DAYS[b.dia].slice(0, 3)} {b.desde}–{b.hasta}
                   </li>
@@ -359,7 +363,7 @@ export function HorariosPanel() {
       </main>
 
       {payload && (
-        <pre className="mx-auto mb-8 max-w-6xl overflow-x-auto rounded-xl bg-slate-900 px-4 py-3 text-xs text-slate-100">
+        <pre className="mx-auto mb-8 max-w-6xl overflow-x-auto rounded-xl bg-[#0F172A] px-4 py-3 text-xs text-slate-100">
           {payload}
         </pre>
       )}
