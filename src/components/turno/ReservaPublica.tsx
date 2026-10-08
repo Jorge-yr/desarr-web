@@ -53,7 +53,7 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
           idClinica: clinica.idClinica,
           idProfesional: profId,
           inicio: slot,
-          duracionMin: clinica.duracionMin,
+          duracionMin: profesional?.duracionMin ?? clinica.duracionMin,
           dni: limpio,
           nombre: datosNuevos ? nombre : "",
           apellido: datosNuevos ? apellido : "",
@@ -96,13 +96,13 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
           idProfesional: profId,
           profesional: profesional?.nombre,
           clinica: clinica.nombre,
-          duracionMin: clinica.duracionMin,
+          duracionMin: profesional?.duracionMin ?? clinica.duracionMin,
           inicio: slot,
           dni,
           nombre,
           apellido,
           whatsapp,
-          importe: clinica.senaArs,
+          importe: profesional?.senaArs ?? clinica.senaArs,
           idTurno,
         }),
       });
@@ -253,10 +253,10 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
             </p>
           )}
           <p className="mt-4 text-sm text-slate-500">
-            Seña {clinica.senaArs > 0 ? `ARS ${clinica.senaArs}` : "sin importe configurado"}. El turno queda
+            Seña {(profesional?.senaArs ?? clinica.senaArs) > 0 ? `ARS ${profesional?.senaArs ?? clinica.senaArs}` : "sin importe configurado"}. El turno queda
             pendiente hasta que Mercado Pago acredite la seña.
           </p>
-          {clinica.senaArs > 0 && (
+          {(profesional?.senaArs ?? clinica.senaArs) > 0 && (
             <button
               type="button"
               onClick={pagar}

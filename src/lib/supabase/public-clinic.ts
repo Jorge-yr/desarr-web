@@ -1,7 +1,7 @@
 import { createSupabaseServerClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import { armarHuecos, type Bloque, type SlotPublico } from "@/lib/turno/huecos";
 
-export type ProfesionalPublico = { id: string; nombre: string };
+export type ProfesionalPublico = { id: string; nombre: string; duracionMin: number; senaArs: number };
 
 export type ClinicaPublica = {
   idClinica: string;
@@ -47,24 +47,21 @@ export async function getClinicaPublica(idClinica: string): Promise<ClinicaPubli
     };
   }
 
-  const lista: ProfesionalPublico[] = profesionales.map((p) => ({
-    id: String(p.id_profesional),
-    nombre: [p.nombre_completo, p.apellido_completo].filter(Boolean).join(" "),
-  }));
-
+  const lista: ProfesionalPublico[] = [];
   const huecos: Record<string, SlotPublico[]> = {};
-  for (const profesional of lista) {
+  for (const p of profesionales) {
+    const id = String(p.id_profesional);
     const { data: config } = await supabase
       .from("configuracion_turnero")
       .select("duracion_turno_min, dias_visibles, importe_sena_ars")
       .eq("id_clinica", idClinica)
-      .eq("id_profesional", profesional.id)
+      .eq("id_profesional", id)
       .maybeSingle();
     const { data: bloques } = await supabase
       .from("horarios_profesionales")
       .select("dia_semana, hora_desde, hora_hasta")
       .eq("id_clinica", idClinica)
-      .eq("id_profesional", profesional.id);
+      .eq("id_profesional", id);
 
     const parsed: Bloque[] = Array.isArray(bloques)
       ? bloques.map((b) => ({
@@ -73,22 +70,28 @@ export async function getClinicaPublica(idClinica: string): Promise<ClinicaPubli
           hasta: String(b.hora_hasta).slice(0, 5),
         }))
       : [];
+    const duracionMin = Number(config?.duracion_turno_min ?? 30);
+    const senaArs = Number(config?.importe_sena_ars ?? 0);
 
-    huecos[profesional.id] = armarHuecos({
+    lista.push({
+      id,
+      nombre: [p.nombre_completo, p.apellido_completo].filter(Boolean).join(" "),
+      duracionMin,
+      senaArs,
+    });
+    huecos[id] = armarHuecos({
       bloques: parsed,
-      duracionMin: Number(config?.duracion_turno_min ?? 30),
+      duracionMin,
       diasAdelante: Number(config?.dias_visibles ?? 21),
     });
-    vacia.duracionMin = Number(config?.duracion_turno_min ?? vacia.duracionMin);
-    vacia.senaArs = Number(config?.importe_sena_ars ?? vacia.senaArs);
   }
 
   return {
     idClinica,
     nombre: clinica?.clinica_consultorio ?? idClinica,
     profesionales: lista,
-    duracionMin: vacia.duracionMin,
-    senaArs: vacia.senaArs,
+    duracionMin: lista[0]?.duracionMin ?? 30,
+    senaArs: lista[0]?.senaArs ?? 0,
     huecos,
     aviso: lista.length === 0 ? "Esta clínica no tiene profesionales cargados." : null,
   };
