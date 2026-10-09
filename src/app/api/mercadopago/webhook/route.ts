@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { tokenPorCuentaExterna } from "@/lib/cobro";
 import { obtenerPago } from "@/lib/mercadopago";
+import { fechaDeRegistro } from "@/lib/turno/ahora";
 
 export async function POST(request: Request) {
   const url = new URL(request.url);
@@ -88,16 +89,8 @@ export async function POST(request: Request) {
       String(row.detalle_medio_cobro ?? "").replace(/\s+/g, "").toLowerCase() === "mercadopago",
     );
     if (turno?.id_paciente && !yaCobrado) {
-      const ahora = new Date();
-      const fecha = ahora.toLocaleDateString("en-CA", { timeZone: "America/Argentina/Buenos_Aires" });
-      const hora = ahora.toLocaleTimeString("en-GB", {
-        timeZone: "America/Argentina/Buenos_Aires",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: false,
-      });
-      const marca = `${fecha} ${hora}`;
+      const fechaMovimiento = await fechaDeRegistro(supabase, "movimientos", "fecha_hora");
+      const fechaCobro = await fechaDeRegistro(supabase, "historial_cobros", "fecha_mov_cobro");
       const importe = pago.transaction_amount;
       const interes = Number(medio?.interes_a_aplicar ?? 0);
       const neto = Math.round(importe * (1 + interes) * 100) / 100;
@@ -107,7 +100,7 @@ export async function POST(request: Request) {
         id_paciente: turno.id_paciente,
         id_profesional: turno.id_profesional,
         id_clinica: idClinica,
-        fecha_hora: marca,
+        fecha_hora: fechaMovimiento,
         tipo_movimiento: "Solo Cobro",
         medio_pago: medio?.tipo_medio_cobro ?? null,
       });
@@ -121,7 +114,7 @@ export async function POST(request: Request) {
           medio_cobro: medio?.tipo_medio_cobro ?? null,
           medio_cobro_detalle: medio?.detalle_medio_cobro ?? null,
           cuotas: medio?.cuotas ?? null,
-          fecha_mov_cobro: marca,
+          fecha_mov_cobro: fechaCobro,
           importe,
           id_clinica: idClinica,
           concepto_haber: "Otros",

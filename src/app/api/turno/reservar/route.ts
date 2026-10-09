@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { fechaDeRegistro } from "@/lib/turno/ahora";
+import { seSolapa } from "@/lib/turno/huecos";
+import { filasAOcupados } from "@/lib/turno/ocupados";
 
 type Body = {
   idClinica?: string;
@@ -75,37 +78,34 @@ export async function POST(request: Request) {
   }
 
   const cuando = enArgentina(body.inicio);
-  const { data: tomados } = await supabase
+  const { data: tomados, error: errorTomados } = await supabase
     .from("historial_turnos")
-    .select("estado_turno, duracion_turno, hora_turno")
-    .eq("id_clinica", body.idClinica)
-    .eq("id_profesional", body.idProfesional)
-    .eq("fecha_turno", cuando.fecha);
+    .select("estado_turno, duracion_turno, fecha_turno, hora_turno, fecha_hora_turno, finaliza_turno")
+    .eq("id_profesional", body.idProfesional);
+  if (errorTomados) return NextResponse.json({ error: "No se pudo verificar si el horario está libre." }, { status: 400 });
   const pedido = horaAMinutos(cuando.hora);
-  const chocan = (tomados ?? []).some((turno) => {
-    const estado = String(turno.estado_turno ?? "").trim().toLowerCase();
-    if (!estado || estado === "cancelado") return false;
-    const inicio = horaAMinutos(String(turno.hora_turno ?? "").slice(0, 5));
-    const minutos = Number(turno.duracion_turno) > 0 ? Number(turno.duracion_turno) : duracion;
-    return pedido < inicio + minutos && pedido + duracion > inicio;
-  });
-  if (chocan) return NextResponse.json({ error: "Ese horario ya fue tomado." }, { status: 409 });
+  const ocupados = filasAOcupados(tomados ?? [], duracion, 60);
+  if (seSolapa(cuando.fecha, pedido, pedido + duracion, ocupados)) {
+    return NextResponse.json({ error: "Ese horario ya fue tomado." }, { status: 409 });
+  }
 
   const fin = new Date(new Date(body.inicio).getTime() + duracion * 60_000);
   const idTransaccion = crypto.randomUUID();
   const idTurno = crypto.randomUUID();
 
+  const fechaMovimiento = await fechaDeRegistro(supabase, "movimientos", "fecha_hora");
   const movimiento = await supabase.from("movimientos").insert({
     id_transaccion: idTransaccion,
     id_paciente: idPaciente,
     id_profesional: body.idProfesional,
     id_clinica: body.idClinica,
-    fecha_hora: cuando.marca,
+    fecha_hora: fechaMovimiento,
     hora_turno: cuando.hora,
     tipo_movimiento: "Solicitud Turno",
   });
   if (movimiento.error) return NextResponse.json({ error: movimiento.error.message }, { status: 400 });
 
+  const fechaTurno = await fechaDeRegistro(supabase, "historial_turnos", "fecha_hora");
   const turno = await supabase.from("historial_turnos").insert({
     id_turno: idTurno,
     id_transaccion: idTransaccion,
@@ -119,7 +119,7 @@ export async function POST(request: Request) {
     finaliza_turno: enArgentina(fin.toISOString()).marca,
     estado_turno: "Pendiente en Turnero Web",
     origen_turno: "Web",
-    fecha_hora: cuando.marca,
+    fecha_hora: fechaTurno,
   });
   if (turno.error) return NextResponse.json({ error: turno.error.message }, { status: 400 });
 
