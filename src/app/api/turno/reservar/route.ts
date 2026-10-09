@@ -24,6 +24,11 @@ function enArgentina(iso: string) {
   return { fecha, hora, marca: `${fecha} ${hora}:00` };
 }
 
+function horaAMinutos(hora: string) {
+  const [h, m] = hora.split(":").map(Number);
+  return h * 60 + (m || 0);
+}
+
 export async function POST(request: Request) {
   const supabase = createServiceClient();
   if (!supabase) {
@@ -70,6 +75,22 @@ export async function POST(request: Request) {
   }
 
   const cuando = enArgentina(body.inicio);
+  const { data: tomados } = await supabase
+    .from("historial_turnos")
+    .select("estado_turno, duracion_turno, hora_turno")
+    .eq("id_clinica", body.idClinica)
+    .eq("id_profesional", body.idProfesional)
+    .eq("fecha_turno", cuando.fecha);
+  const pedido = horaAMinutos(cuando.hora);
+  const chocan = (tomados ?? []).some((turno) => {
+    const estado = String(turno.estado_turno ?? "").trim().toLowerCase();
+    if (!estado || estado === "cancelado") return false;
+    const inicio = horaAMinutos(String(turno.hora_turno ?? "").slice(0, 5));
+    const minutos = Number(turno.duracion_turno) > 0 ? Number(turno.duracion_turno) : duracion;
+    return pedido < inicio + minutos && pedido + duracion > inicio;
+  });
+  if (chocan) return NextResponse.json({ error: "Ese horario ya fue tomado." }, { status: 409 });
+
   const fin = new Date(new Date(body.inicio).getTime() + duracion * 60_000);
   const idTransaccion = crypto.randomUUID();
   const idTurno = crypto.randomUUID();

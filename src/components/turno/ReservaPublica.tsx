@@ -21,6 +21,7 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
   const [pagando, setPagando] = useState(false);
   const [initPoint, setInitPoint] = useState("");
   const [qrPago, setQrPago] = useState("");
+  const [esEscritorio, setEsEscritorio] = useState(false);
   const [errorPago, setErrorPago] = useState("");
 
   const profesional = clinica.profesionales.find((p) => p.id === profId);
@@ -31,8 +32,9 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
     const groups = new Map<string, { label: string; items: typeof huecos }>();
     for (const hueco of huecos) {
       const date = new Date(hueco.inicio);
-      const key = date.toLocaleDateString("en-CA");
+      const key = date.toLocaleDateString("en-CA", { timeZone: "America/Argentina/Buenos_Aires" });
       const label = date.toLocaleDateString("es-AR", {
+        timeZone: "America/Argentina/Buenos_Aires",
         weekday: "short",
         day: "numeric",
         month: "short",
@@ -90,6 +92,11 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
   }
 
   useEffect(() => {
+    const movil = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+    setEsEscritorio(!movil);
+  }, []);
+
+  useEffect(() => {
     if (paso !== "listo" || sena <= 0 || !idTurno || initPoint) return;
     let cancelado = false;
     void (async () => {
@@ -135,8 +142,16 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
 
   return (
     <main className="mx-auto min-h-full max-w-lg bg-slate-100 px-4 py-8 text-slate-900">
-      <p className="text-xs font-semibold uppercase tracking-wide text-teal-700">Reservar turno</p>
-      <h1 className="mt-1 text-2xl font-semibold tracking-tight">{clinica.nombre}</h1>
+      <header className="text-center">
+        <img src="/clinex.png" alt="Clinex" className="mx-auto h-16 w-auto" />
+        <h1 className="mt-4 text-2xl font-semibold tracking-tight">
+          Sistema de reserva de turnos
+          <sup className="ml-0.5 text-xs">®</sup>
+        </h1>
+        <p className="mt-1 text-sm text-slate-600">Un producto de Desarr Soluciones.</p>
+      </header>
+      <p className="mt-6 text-xs font-semibold uppercase tracking-wide text-[#10B981]">Reservar turno:</p>
+      <p className="mt-1 text-lg font-semibold">{clinica.nombre}</p>
       {clinica.aviso && <p className="mt-3 text-sm text-slate-500">{clinica.aviso}</p>}
 
       {paso === "profesional" && (
@@ -166,7 +181,7 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
           </button>
           <h2 className="mt-3 text-sm font-medium text-slate-600">{profesional?.nombre}</h2>
           <p className="mt-1 text-xs text-slate-500">
-            Se muestran los huecos libres. Un turno ocupado o pendiente no aparece.
+            En verde podés reservar. En gris el horario ya está tomado.
           </p>
           <div className="mt-4 flex flex-col gap-4">
             {dias.length === 0 && <p className="text-sm text-slate-500">No hay horarios disponibles.</p>}
@@ -178,13 +193,23 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
                     <button
                       key={item.inicio}
                       type="button"
+                      disabled={!item.libre}
                       onClick={() => {
+                        if (!item.libre) return;
                         setSlot(item.inicio);
                         setPaso("dni");
                       }}
-                      className="rounded-full bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-slate-200"
+                      className={`rounded-full px-3 py-2 text-sm font-medium ${
+                        item.libre
+                          ? "bg-[#10B981] text-white"
+                          : "cursor-not-allowed bg-slate-300 text-slate-500"
+                      }`}
                     >
-                      {new Date(item.inicio).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })}
+                      {new Date(item.inicio).toLocaleTimeString("es-AR", {
+                        timeZone: "America/Argentina/Buenos_Aires",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
                     </button>
                   ))}
                 </div>
@@ -292,12 +317,12 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
               ) : (
                 <p className="text-sm text-slate-500">{pagando ? "Preparando Mercado Pago…" : "El pago no está listo."}</p>
               )}
-              {qrPago && (
+              {esEscritorio && qrPago && (
                 <img src={qrPago} alt="QR para pagar la seña con el celular" className="h-36 w-36 rounded-lg bg-white" />
               )}
             </div>
           )}
-          {qrPago && (
+          {esEscritorio && qrPago && (
             <p className="mt-3 text-xs text-slate-500">
               Si estás en una computadora, escaneá el QR con el celular. El pago entra en la cuenta de Mercado Pago de la clínica.
             </p>
@@ -305,6 +330,24 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
           {errorPago && <p className="mt-3 text-sm text-red-700">{errorPago}</p>}
         </section>
       )}
+      <footer className="mt-10 border-t border-slate-200 pt-6 text-center text-sm text-slate-600">
+        <p className="font-semibold text-[#0F172A]">Desarr Soluciones</p>
+        <p className="mt-2">
+          <a href="mailto:desarrsoluciones@gmail.com" className="text-[#1D4ED8]">
+            desarrsoluciones@gmail.com
+          </a>
+        </p>
+        <p className="mt-1">
+          <a href="https://instagram.com/desarrsoluciones" className="text-[#1D4ED8]" target="_blank" rel="noopener noreferrer">
+            @desarrsoluciones
+          </a>
+        </p>
+        <p className="mt-3">
+          <a href="https://www.desarr.com" className="font-medium text-[#1D4ED8]">
+            www.desarr.com
+          </a>
+        </p>
+      </footer>
     </main>
   );
 }
