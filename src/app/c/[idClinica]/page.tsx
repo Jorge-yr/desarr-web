@@ -3,7 +3,7 @@ import { ReservaPublica } from "@/components/turno/ReservaPublica";
 import { getClinicaPublica } from "@/lib/supabase/public-clinic";
 
 export const metadata: Metadata = {
-  title: "Reservar turno",
+  title: "Sistema de reserva de turnos",
   robots: { index: false, follow: false },
 };
 
