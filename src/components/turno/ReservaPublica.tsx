@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { ClinicaPublica } from "@/lib/supabase/public-clinic";
+import { aplicarOcupados, type Ocupado } from "@/lib/turno/huecos";
 
 type Paso = "profesional" | "horario" | "dni" | "datos" | "listo";
 
@@ -23,10 +24,13 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
   const [qrPago, setQrPago] = useState("");
   const [esEscritorio, setEsEscritorio] = useState(false);
   const [errorPago, setErrorPago] = useState("");
+  const [ocupados, setOcupados] = useState<Ocupado[] | null>(null);
+  const [avisoOcupados, setAvisoOcupados] = useState("");
 
   const profesional = clinica.profesionales.find((p) => p.id === profId);
   const sena = profesional?.senaArs ?? clinica.senaArs;
-  const huecos = clinica.huecos[profId] ?? [];
+  const huecosBase = clinica.huecos[profId] ?? [];
+  const huecos = ocupados ? aplicarOcupados(huecosBase, ocupados, profesional?.duracionMin ?? clinica.duracionMin) : huecosBase;
   const elegido = huecos.find((h) => h.inicio === slot);
   const dias = useMemo(() => {
     const groups = new Map<string, { label: string; items: typeof huecos }>();
@@ -45,6 +49,31 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
     }
     return [...groups.entries()].sort((a, b) => b[0].localeCompare(a[0]));
   }, [huecos]);
+
+  useEffect(() => {
+    if (!profId) return;
+    const ctrl = new AbortController();
+    setOcupados(null);
+    setAvisoOcupados("");
+    const duracion = profesional?.duracionMin ?? clinica.duracionMin;
+    const params = new URLSearchParams({
+      idClinica: clinica.idClinica,
+      idProfesional: profId,
+      duracionMin: String(duracion),
+    });
+    fetch(`/api/turno/ocupados?${params}`, { signal: ctrl.signal, cache: "no-store" })
+      .then(async (res) => {
+        const body = (await res.json()) as { ocupados?: Ocupado[]; error?: string };
+        if (!res.ok) throw new Error(body.error || "No se pudieron leer los turnos.");
+        setOcupados(body.ocupados ?? []);
+      })
+      .catch((err: unknown) => {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        setAvisoOcupados("No se pudieron marcar los horarios ya ocupados.");
+        setOcupados([]);
+      });
+    return () => ctrl.abort();
+  }, [profId, clinica.idClinica, clinica.duracionMin, profesional?.duracionMin]);
 
   async function reservar(datosNuevos: boolean) {
     const limpio = dni.replace(/\D/g, "");
@@ -183,9 +212,11 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
           <p className="mt-1 text-xs text-slate-500">
             En verde podés reservar. En gris el horario ya está tomado.
           </p>
+          {avisoOcupados && <p className="mt-2 text-sm text-red-700">{avisoOcupados}</p>}
           <div className="mt-4 flex flex-col gap-4">
-            {dias.length === 0 && <p className="text-sm text-slate-500">No hay horarios disponibles.</p>}
-            {dias.map(([dia, grupo]) => (
+            {ocupados === null && <p className="text-sm text-slate-500">Revisando turnos ocupados…</p>}
+            {ocupados !== null && dias.length === 0 && <p className="text-sm text-slate-500">No hay horarios disponibles.</p>}
+            {ocupados !== null && dias.map(([dia, grupo]) => (
               <div key={dia}>
                 <p className="text-xs font-semibold uppercase text-slate-400">{grupo.label}</p>
                 <div className="mt-2 flex flex-wrap gap-2">

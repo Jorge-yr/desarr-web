@@ -2,7 +2,7 @@ export type Bloque = { dia: number; desde: string; hasta: string };
 
 export type SlotPublico = { inicio: string; etiqueta: string; libre: boolean };
 
-export type Ocupado = { inicio: string; fin: string };
+export type Ocupado = { ymd: string; desdeMin: number; hastaMin: number };
 
 const ZONA = "America/Argentina/Buenos_Aires";
 
@@ -39,11 +39,26 @@ function instante(ymd: string, totalMin: number) {
   return new Date(`${ymd}T${hora}:${minuto}:00-03:00`);
 }
 
-function pisa(inicio: number, fin: number, ocupados: Ocupado[]) {
-  return ocupados.some((ocupado) => {
-    const desde = new Date(ocupado.inicio).getTime();
-    const hasta = new Date(ocupado.fin).getTime();
-    return inicio < hasta && fin > desde;
+export function seSolapa(ymd: string, desde: number, hasta: number, ocupados: Ocupado[]) {
+  return ocupados.some(
+    (ocupado) => ocupado.ymd === ymd && desde < ocupado.hastaMin && hasta > ocupado.desdeMin,
+  );
+}
+
+export function aplicarOcupados(slots: SlotPublico[], ocupados: Ocupado[], duracionMin: number): SlotPublico[] {
+  const duracion = duracionMin > 0 ? duracionMin : 30;
+  return slots.map((slot) => {
+    const fecha = new Date(slot.inicio);
+    const ymd = fecha.toLocaleDateString("en-CA", { timeZone: ZONA });
+    const reloj = fecha.toLocaleTimeString("en-GB", {
+      timeZone: ZONA,
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+    const [hora, minuto] = reloj.split(":").map(Number);
+    const desde = hora * 60 + minuto;
+    return { ...slot, libre: !seSolapa(ymd, desde, desde + duracion, ocupados) };
   });
 }
 
@@ -67,9 +82,8 @@ export function armarHuecos(opts: {
     for (const bloque of delDia) {
       for (let t = minutes(bloque.desde); t + duracion <= minutes(bloque.hasta); t += duracion) {
         const inicio = instante(ymd, t);
-        const fin = instante(ymd, t + duracion);
         if (inicio.getTime() <= Date.now()) continue;
-        const libre = !pisa(inicio.getTime(), fin.getTime(), ocupados);
+        const libre = !seSolapa(ymd, t, t + duracion, ocupados);
         const etiqueta = inicio.toLocaleString("es-AR", {
           timeZone: ZONA,
           weekday: "short",
