@@ -150,7 +150,8 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
         </h1>
         <p className="mt-1 text-sm text-slate-600">Un producto de Desarr Soluciones.</p>
       </header>
-      <p className="mt-6 text-lg font-semibold">{clinica.nombre}</p>
+      <p className="mt-6 text-xs font-semibold uppercase tracking-wide text-[#10B981]">Reservar turno:</p>
+      <p className="mt-1 text-lg font-semibold">{clinica.nombre}</p>
       {clinica.aviso && <p className="mt-3 text-sm text-slate-500">{clinica.aviso}</p>}
 
       {paso === "profesional" && (
