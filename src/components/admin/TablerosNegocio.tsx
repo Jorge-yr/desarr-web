@@ -29,31 +29,61 @@ export function TablerosNegocio({ datos }: { datos: TableroNegocio }) {
   const [profesionalId, setProfesionalId] = useState("");
   const [paciente, setPaciente] = useState("");
   const [medio, setMedio] = useState("");
+  const [categorias, setCategorias] = useState<string[]>([]);
   const [corteAtencion, setCorteAtencion] = useState<"profesional" | "paciente" | "producto">("profesional");
   const [corteCobro, setCorteCobro] = useState<"profesional" | "paciente" | "medio" | "producto">("profesional");
   const [abierto, setAbierto] = useState("");
 
   const enPeriodo = (mes: string) => (!desde || mes >= desde) && (!hasta || mes <= hasta);
   const delProfesional = (id: string) => !profesionalId || id === profesionalId;
+  const deCategoria = (categoria: string) => categorias.length === 0 || categorias.includes(categoria);
 
   const visitas = useMemo(() => {
     const busqueda = paciente.trim().toLocaleLowerCase("es");
-    const grupos = new Map<string, { paciente: string; mes: string; visitas: number }>();
+    const conCategoria = new Set<string>();
+    if (categorias.length > 0) {
+      for (const fila of datos.atenciones) {
+        if (deCategoria(fila.categoria)) conCategoria.add(`${fila.pacienteId}|${fila.mes}`);
+      }
+    }
+    const grupos = new Map<string, { pacienteId: string; paciente: string; mes: string; visitas: number }>();
     for (const fila of datos.visitas) {
       if (!enPeriodo(fila.mes) || !delProfesional(fila.profesionalId)) continue;
       if (busqueda && !fila.paciente.toLocaleLowerCase("es").includes(busqueda)) continue;
+      if (categorias.length > 0 && !conCategoria.has(`${fila.pacienteId}|${fila.mes}`)) continue;
       const clave = `${fila.pacienteId}|${fila.mes}`;
-      const actual = grupos.get(clave) ?? { paciente: fila.paciente, mes: fila.mes, visitas: 0 };
+      const actual = grupos.get(clave) ?? { pacienteId: fila.pacienteId, paciente: fila.paciente, mes: fila.mes, visitas: 0 };
       actual.visitas += 1;
       grupos.set(clave, actual);
     }
-    return [...grupos.values()].sort((a, b) => b.mes.localeCompare(a.mes) || b.visitas - a.visitas || a.paciente.localeCompare(b.paciente, "es"));
-  }, [datos.visitas, desde, hasta, profesionalId, paciente]);
+    return [...grupos.values()];
+  }, [datos.visitas, datos.atenciones, desde, hasta, profesionalId, paciente, categorias]);
+
+  const mapaVisitas = useMemo(() => {
+    const columnas = [...new Set(visitas.map((fila) => fila.mes))].sort();
+    const filas = new Map<string, { paciente: string; celdas: Map<string, number> }>();
+    let max = 1;
+    for (const fila of visitas) {
+      const actual = filas.get(fila.pacienteId) ?? { paciente: fila.paciente, celdas: new Map() };
+      const total = (actual.celdas.get(fila.mes) ?? 0) + fila.visitas;
+      actual.celdas.set(fila.mes, total);
+      if (total > max) max = total;
+      filas.set(fila.pacienteId, actual);
+    }
+    const pacientes = [...filas.entries()]
+      .map(([id, fila]) => ({
+        id,
+        ...fila,
+        total: [...fila.celdas.values()].reduce((suma, valor) => suma + valor, 0),
+      }))
+      .sort((a, b) => b.total - a.total || a.paciente.localeCompare(b.paciente, "es"));
+    return { columnas, pacientes, max };
+  }, [visitas]);
 
   const atenciones = useMemo(() => {
     const grupos = new Map<string, { etiqueta: string; mes: string; atenciones: number }>();
     for (const fila of datos.atenciones) {
-      if (!enPeriodo(fila.mes) || !delProfesional(fila.profesionalId)) continue;
+      if (!enPeriodo(fila.mes) || !delProfesional(fila.profesionalId) || !deCategoria(fila.categoria)) continue;
       const etiqueta = corteAtencion === "paciente" ? fila.paciente : corteAtencion === "producto" ? fila.producto : nombreProf(datos, fila.profesionalId);
       const clave = `${etiqueta}|${fila.mes}`;
       const actual = grupos.get(clave) ?? { etiqueta, mes: fila.mes, atenciones: 0 };
@@ -61,12 +91,12 @@ export function TablerosNegocio({ datos }: { datos: TableroNegocio }) {
       grupos.set(clave, actual);
     }
     return [...grupos.values()].sort((a, b) => b.mes.localeCompare(a.mes) || b.atenciones - a.atenciones);
-  }, [datos, desde, hasta, profesionalId, corteAtencion]);
+  }, [datos, desde, hasta, profesionalId, corteAtencion, categorias]);
 
   const recaudacion = useMemo(() => {
     const grupos = new Map<string, { etiqueta: string; mes: string; importe: number; medios: Map<string, number> }>();
     for (const fila of datos.cobros) {
-      if (!enPeriodo(fila.mes) || !delProfesional(fila.profesionalId)) continue;
+      if (!enPeriodo(fila.mes) || !delProfesional(fila.profesionalId) || !deCategoria(fila.categoria)) continue;
       if (medio && fila.medio !== medio) continue;
       const etiqueta =
         corteCobro === "paciente" ? fila.paciente : corteCobro === "producto" ? fila.producto : corteCobro === "medio" ? fila.medio : nombreProf(datos, fila.profesionalId);
@@ -77,10 +107,9 @@ export function TablerosNegocio({ datos }: { datos: TableroNegocio }) {
       grupos.set(clave, actual);
     }
     return [...grupos.values()].sort((a, b) => b.mes.localeCompare(a.mes) || b.importe - a.importe);
-  }, [datos, desde, hasta, profesionalId, medio, corteCobro]);
+  }, [datos, desde, hasta, profesionalId, medio, corteCobro, categorias]);
 
   const medios = useMemo(() => [...new Set(datos.cobros.map((fila) => fila.medio))].sort((a, b) => a.localeCompare(b, "es")), [datos.cobros]);
-  const maxVisitas = Math.max(1, ...visitas.map((fila) => fila.visitas));
   const maxAtenciones = Math.max(1, ...atenciones.map((fila) => fila.atenciones));
 
   return (
@@ -108,19 +137,63 @@ export function TablerosNegocio({ datos }: { datos: TableroNegocio }) {
           Paciente
           <input value={paciente} onChange={(e) => setPaciente(e.target.value)} placeholder="Buscar en visitas" className="rounded-lg border border-slate-300 px-2 py-2 text-sm" />
         </label>
+        <div className="flex flex-col gap-1 text-xs font-medium text-slate-600 sm:col-span-4">
+          Categorías de producto
+          <div className="flex flex-wrap gap-2">
+            {datos.categorias.map((categoria) => {
+              const activa = categorias.includes(categoria);
+              return (
+                <button
+                  key={categoria}
+                  type="button"
+                  aria-pressed={activa}
+                  onClick={() =>
+                    setCategorias((actual) =>
+                      actual.includes(categoria) ? actual.filter((item) => item !== categoria) : [...actual, categoria],
+                    )
+                  }
+                  className={`rounded-full border px-3 py-1.5 text-sm ${
+                    activa ? "border-[#1D4ED8] bg-[#1D4ED8] text-white" : "border-slate-300 bg-white text-slate-700"
+                  }`}
+                >
+                  {categoria}
+                </button>
+              );
+            })}
+            {datos.categorias.length === 0 && <span className="py-1.5 text-sm font-normal text-slate-500">No hay categorías cargadas.</span>}
+          </div>
+        </div>
       </div>
 
-      <Seccion titulo="Visitas por usuario" detalle="Cuántas veces vino cada paciente en el mes. No cuenta turnos cancelados o anulados.">
-        {visitas.length === 0 ? <Vacio /> : (
-          <Tabla encabezados={["Paciente", "Mes", "Visitas"]}>
-            {visitas.map((fila) => (
-              <tr key={`${fila.paciente}-${fila.mes}`} className="border-t border-slate-100">
-                <td className="px-4 py-2">{fila.paciente}</td>
-                <td className="px-4 py-2">{etiquetaMes(fila.mes)}</td>
-                <td className="px-4 py-2"><Barra valor={fila.visitas} max={maxVisitas} /></td>
-              </tr>
-            ))}
-          </Tabla>
+      <Seccion titulo="Visitas por usuario" detalle="Cada celda es la cantidad de visitas del paciente en ese mes. El color crece con la cantidad. Sin categorías marcadas se ven todas.">
+        {mapaVisitas.pacientes.length === 0 ? <Vacio /> : (
+          <div className="overflow-x-auto">
+            <table className="w-full border-separate border-spacing-1 text-left text-sm">
+              <thead>
+                <tr>
+                  <th className="sticky left-0 bg-white px-3 py-2 text-xs font-medium uppercase tracking-wide text-slate-500">Paciente</th>
+                  {mapaVisitas.columnas.map((mes) => (
+                    <th key={mes} className="px-2 py-2 text-center text-xs font-medium uppercase tracking-wide text-slate-500">{etiquetaMes(mes)}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {mapaVisitas.pacientes.map((fila) => (
+                  <tr key={fila.id}>
+                    <th className="sticky left-0 bg-white px-3 py-2 text-left font-medium text-slate-800">{fila.paciente}</th>
+                    {mapaVisitas.columnas.map((mes) => {
+                      const valor = fila.celdas.get(mes) ?? 0;
+                      return (
+                        <td key={mes} className={`rounded-md px-2 py-2 text-center tabular-nums ${tonoVisita(valor, mapaVisitas.max)}`}>
+                          {valor || ""}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </Seccion>
 
@@ -230,6 +303,15 @@ function Tabla({ encabezados, children }: { encabezados: string[]; children: Rea
       </table>
     </div>
   );
+}
+
+function tonoVisita(valor: number, max: number) {
+  if (!valor) return "bg-slate-50 text-slate-300";
+  const peso = valor / max;
+  if (peso > 0.75) return "bg-[#1D4ED8] text-white";
+  if (peso > 0.5) return "bg-[#3B82F6] text-white";
+  if (peso > 0.25) return "bg-[#93C5FD] text-slate-900";
+  return "bg-[#DBEAFE] text-slate-900";
 }
 
 function Barra({ valor, max }: { valor: number; max: number }) {
