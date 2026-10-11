@@ -6,6 +6,13 @@ import { aplicarOcupados, type Ocupado } from "@/lib/turno/huecos";
 
 type Paso = "profesional" | "horario" | "dni" | "datos" | "listo";
 
+function minutosDe(hora: string) {
+  if (!hora) return null;
+  const [h, m] = hora.split(":").map(Number);
+  if (!Number.isFinite(h) || !Number.isFinite(m)) return null;
+  return h * 60 + m;
+}
+
 export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
   const [paso, setPaso] = useState<Paso>("profesional");
   const [profId, setProfId] = useState("");
@@ -26,15 +33,41 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
   const [errorPago, setErrorPago] = useState("");
   const [ocupados, setOcupados] = useState<Ocupado[] | null>(null);
   const [avisoOcupados, setAvisoOcupados] = useState("");
+  const [fechaDesde, setFechaDesde] = useState("");
+  const [fechaHasta, setFechaHasta] = useState("");
+  const [horaDesde, setHoraDesde] = useState("");
+  const [horaHasta, setHoraHasta] = useState("");
 
   const profesional = clinica.profesionales.find((p) => p.id === profId);
   const sena = profesional?.senaArs ?? clinica.senaArs;
   const huecosBase = clinica.huecos[profId] ?? [];
   const huecos = ocupados ? aplicarOcupados(huecosBase, ocupados, profesional?.duracionMin ?? clinica.duracionMin) : huecosBase;
   const elegido = huecos.find((h) => h.inicio === slot);
+  const huecosVisibles = useMemo(() => {
+    const desdeMin = minutosDe(horaDesde);
+    const hastaMin = minutosDe(horaHasta);
+    return huecos.filter((hueco) => {
+      if (!hueco.libre) return false;
+      const fecha = new Date(hueco.inicio);
+      const dia = fecha.toLocaleDateString("en-CA", { timeZone: "America/Argentina/Buenos_Aires" });
+      if (fechaDesde && dia < fechaDesde) return false;
+      if (fechaHasta && dia > fechaHasta) return false;
+      const reloj = fecha.toLocaleTimeString("en-GB", {
+        timeZone: "America/Argentina/Buenos_Aires",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      });
+      const [hora, minuto] = reloj.split(":").map(Number);
+      const marca = hora * 60 + minuto;
+      if (desdeMin !== null && marca < desdeMin) return false;
+      if (hastaMin !== null && marca >= hastaMin) return false;
+      return true;
+    });
+  }, [huecos, fechaDesde, fechaHasta, horaDesde, horaHasta]);
   const dias = useMemo(() => {
-    const groups = new Map<string, { label: string; items: typeof huecos }>();
-    for (const hueco of huecos) {
+    const groups = new Map<string, { label: string; items: typeof huecosVisibles }>();
+    for (const hueco of huecosVisibles) {
       const date = new Date(hueco.inicio);
       const key = date.toLocaleDateString("en-CA", { timeZone: "America/Argentina/Buenos_Aires" });
       const label = date.toLocaleDateString("es-AR", {
@@ -48,7 +81,7 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
       groups.set(key, current);
     }
     return [...groups.entries()].sort((a, b) => b[0].localeCompare(a[0]));
-  }, [huecos]);
+  }, [huecosVisibles]);
 
   useEffect(() => {
     if (!profId) return;
@@ -193,11 +226,15 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
               onClick={() => {
                 setProfId(p.id);
                 setSlot("");
+                setFechaDesde("");
+                setFechaHasta("");
+                setHoraDesde("");
+                setHoraHasta("");
                 setPaso("horario");
               }}
               className="rounded-2xl border border-slate-200 bg-white px-4 py-4 text-left font-medium shadow-sm"
             >
-              {p.nombre}
+              <span className="block text-base">{p.nombre}</span>
             </button>
           ))}
         </section>
@@ -208,11 +245,50 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
           <button type="button" className="text-sm text-teal-800" onClick={() => setPaso("profesional")}>
             Cambiar profesional
           </button>
-          <h2 className="mt-3 text-sm font-medium text-slate-600">{profesional?.nombre}</h2>
+          <h2 className="mt-3 text-xl font-semibold text-slate-900">{profesional?.nombre}</h2>
           <p className="mt-1 text-xs text-slate-500">
-            En verde podés reservar. En gris el horario ya está tomado.
+            Solo se muestran los horarios libres. Si el rango no tiene lugar, no aparece ningún turno.
           </p>
           {avisoOcupados && <p className="mt-2 text-sm text-red-700">{avisoOcupados}</p>}
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <label className="flex flex-col gap-1 text-xs font-medium text-slate-600">
+              Fecha desde
+              <input
+                type="date"
+                value={fechaDesde}
+                onChange={(e) => setFechaDesde(e.target.value)}
+                className="rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm"
+              />
+            </label>
+            <label className="flex flex-col gap-1 text-xs font-medium text-slate-600">
+              Fecha hasta
+              <input
+                type="date"
+                value={fechaHasta}
+                min={fechaDesde || undefined}
+                onChange={(e) => setFechaHasta(e.target.value)}
+                className="rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm"
+              />
+            </label>
+            <label className="flex flex-col gap-1 text-xs font-medium text-slate-600">
+              Hora desde
+              <input
+                type="time"
+                value={horaDesde}
+                onChange={(e) => setHoraDesde(e.target.value)}
+                className="rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm"
+              />
+            </label>
+            <label className="flex flex-col gap-1 text-xs font-medium text-slate-600">
+              Hora hasta
+              <input
+                type="time"
+                value={horaHasta}
+                onChange={(e) => setHoraHasta(e.target.value)}
+                className="rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm"
+              />
+            </label>
+          </div>
           <div className="mt-4 flex flex-col gap-4">
             {ocupados === null && <p className="text-sm text-slate-500">Revisando turnos ocupados…</p>}
             {ocupados !== null && dias.length === 0 && <p className="text-sm text-slate-500">No hay horarios disponibles.</p>}
@@ -224,17 +300,11 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
                     <button
                       key={item.inicio}
                       type="button"
-                      disabled={!item.libre}
                       onClick={() => {
-                        if (!item.libre) return;
                         setSlot(item.inicio);
                         setPaso("dni");
                       }}
-                      className={`rounded-full px-3 py-2 text-sm font-medium ${
-                        item.libre
-                          ? "bg-[#10B981] text-white"
-                          : "cursor-not-allowed bg-slate-300 text-slate-500"
-                      }`}
+                      className="rounded-full bg-[#10B981] px-3 py-2 text-sm font-medium text-white"
                     >
                       {new Date(item.inicio).toLocaleTimeString("es-AR", {
                         timeZone: "America/Argentina/Buenos_Aires",

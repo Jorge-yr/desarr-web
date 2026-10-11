@@ -3,7 +3,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { armarHuecos, type Bloque, type Ocupado, type SlotPublico } from "@/lib/turno/huecos";
 import { filasAOcupados } from "@/lib/turno/ocupados";
 
-export type ProfesionalPublico = { id: string; nombre: string; duracionMin: number; senaArs: number };
+export type ProfesionalPublico = { id: string; nombre: string; titulo: string; duracionMin: number; senaArs: number };
 
 export type ClinicaPublica = {
   idClinica: string;
@@ -38,7 +38,7 @@ export async function getClinicaPublica(idClinica: string): Promise<ClinicaPubli
 
   const { data: profesionales, error } = await supabase
     .from("profesionales")
-    .select("id_profesional, nombre_completo, apellido_completo")
+    .select("id_profesional, nombre_completo, apellido_completo, titulo")
     .eq("id_clinica", idClinica);
 
   if (error || !Array.isArray(profesionales)) {
@@ -77,9 +77,12 @@ export async function getClinicaPublica(idClinica: string): Promise<ClinicaPubli
     const diasAdelante = Number(config?.dias_visibles ?? 21);
     const ocupados = await turnosOcupados(id, diasAdelante, duracionMin);
 
+    const titulo = String(p.titulo ?? "").trim();
+    const nombre = [titulo, p.nombre_completo, p.apellido_completo].filter(Boolean).join(" ");
     lista.push({
       id,
-      nombre: [p.nombre_completo, p.apellido_completo].filter(Boolean).join(" "),
+      nombre,
+      titulo,
       duracionMin,
       senaArs,
     });
