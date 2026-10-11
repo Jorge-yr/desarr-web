@@ -6,11 +6,30 @@ import { aplicarOcupados, type Ocupado } from "@/lib/turno/huecos";
 
 type Paso = "profesional" | "horario" | "dni" | "datos" | "listo";
 
+const DIAS_SEMANA = [
+  { id: 1, label: "Lun" },
+  { id: 2, label: "Mar" },
+  { id: 3, label: "Mié" },
+  { id: 4, label: "Jue" },
+  { id: 5, label: "Vie" },
+  { id: 6, label: "Sáb" },
+  { id: 0, label: "Dom" },
+] as const;
+
 function minutosDe(hora: string) {
   if (!hora) return null;
   const [h, m] = hora.split(":").map(Number);
   if (!Number.isFinite(h) || !Number.isFinite(m)) return null;
   return h * 60 + m;
+}
+
+function diaSemanaEnArgentina(iso: string) {
+  const nombre = new Date(iso).toLocaleDateString("en-US", {
+    timeZone: "America/Argentina/Buenos_Aires",
+    weekday: "short",
+  });
+  const indice = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(nombre);
+  return indice;
 }
 
 export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
@@ -33,10 +52,9 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
   const [errorPago, setErrorPago] = useState("");
   const [ocupados, setOcupados] = useState<Ocupado[] | null>(null);
   const [avisoOcupados, setAvisoOcupados] = useState("");
-  const [fechaDesde, setFechaDesde] = useState("");
-  const [fechaHasta, setFechaHasta] = useState("");
   const [horaDesde, setHoraDesde] = useState("");
   const [horaHasta, setHoraHasta] = useState("");
+  const [diasElegidos, setDiasElegidos] = useState<number[]>([]);
 
   const profesional = clinica.profesionales.find((p) => p.id === profId);
   const sena = profesional?.senaArs ?? clinica.senaArs;
@@ -49,9 +67,7 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
     return huecos.filter((hueco) => {
       if (!hueco.libre) return false;
       const fecha = new Date(hueco.inicio);
-      const dia = fecha.toLocaleDateString("en-CA", { timeZone: "America/Argentina/Buenos_Aires" });
-      if (fechaDesde && dia < fechaDesde) return false;
-      if (fechaHasta && dia > fechaHasta) return false;
+      if (diasElegidos.length > 0 && !diasElegidos.includes(diaSemanaEnArgentina(hueco.inicio))) return false;
       const reloj = fecha.toLocaleTimeString("en-GB", {
         timeZone: "America/Argentina/Buenos_Aires",
         hour: "2-digit",
@@ -64,7 +80,7 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
       if (hastaMin !== null && marca >= hastaMin) return false;
       return true;
     });
-  }, [huecos, fechaDesde, fechaHasta, horaDesde, horaHasta]);
+  }, [huecos, diasElegidos, horaDesde, horaHasta]);
   const dias = useMemo(() => {
     const groups = new Map<string, { label: string; items: typeof huecosVisibles }>();
     for (const hueco of huecosVisibles) {
@@ -226,10 +242,9 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
               onClick={() => {
                 setProfId(p.id);
                 setSlot("");
-                setFechaDesde("");
-                setFechaHasta("");
                 setHoraDesde("");
                 setHoraHasta("");
+                setDiasElegidos([]);
                 setPaso("horario");
               }}
               className="rounded-2xl border border-slate-200 bg-white px-4 py-4 text-left font-medium shadow-sm"
@@ -250,44 +265,50 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
             Solo se muestran los horarios libres. Si el rango no tiene lugar, no aparece ningún turno.
           </p>
           {avisoOcupados && <p className="mt-2 text-sm text-red-700">{avisoOcupados}</p>}
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            <label className="flex flex-col gap-1 text-xs font-medium text-slate-600">
-              Fecha desde
-              <input
-                type="date"
-                value={fechaDesde}
-                onChange={(e) => setFechaDesde(e.target.value)}
-                className="rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm"
-              />
-            </label>
-            <label className="flex flex-col gap-1 text-xs font-medium text-slate-600">
-              Fecha hasta
-              <input
-                type="date"
-                value={fechaHasta}
-                min={fechaDesde || undefined}
-                onChange={(e) => setFechaHasta(e.target.value)}
-                className="rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm"
-              />
-            </label>
-            <label className="flex flex-col gap-1 text-xs font-medium text-slate-600">
-              Hora desde
-              <input
-                type="time"
-                value={horaDesde}
-                onChange={(e) => setHoraDesde(e.target.value)}
-                className="rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm"
-              />
-            </label>
-            <label className="flex flex-col gap-1 text-xs font-medium text-slate-600">
-              Hora hasta
-              <input
-                type="time"
-                value={horaHasta}
-                onChange={(e) => setHoraHasta(e.target.value)}
-                className="rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm"
-              />
-            </label>
+          <div className="mt-4 rounded-2xl border border-slate-300 bg-white p-4">
+            <p className="text-xs font-medium text-slate-600">Día de la semana</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {DIAS_SEMANA.map((dia) => {
+                const activo = diasElegidos.includes(dia.id);
+                return (
+                  <button
+                    key={dia.id}
+                    type="button"
+                    aria-pressed={activo}
+                    onClick={() =>
+                      setDiasElegidos((actual) =>
+                        actual.includes(dia.id) ? actual.filter((id) => id !== dia.id) : [...actual, dia.id],
+                      )
+                    }
+                    className={`rounded-full border px-3 py-1.5 text-sm ${
+                      activo ? "border-[#10B981] bg-[#10B981] text-white" : "border-slate-300 bg-white text-slate-700"
+                    }`}
+                  >
+                    {dia.label}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <label className="flex flex-col gap-1 text-xs font-medium text-slate-600">
+                Hora desde
+                <input
+                  type="time"
+                  value={horaDesde}
+                  onChange={(e) => setHoraDesde(e.target.value)}
+                  className="rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm"
+                />
+              </label>
+              <label className="flex flex-col gap-1 text-xs font-medium text-slate-600">
+                Hora hasta
+                <input
+                  type="time"
+                  value={horaHasta}
+                  onChange={(e) => setHoraHasta(e.target.value)}
+                  className="rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm"
+                />
+              </label>
+            </div>
           </div>
           <div className="mt-4 flex flex-col gap-4">
             {ocupados === null && <p className="text-sm text-slate-500">Revisando turnos ocupados…</p>}
