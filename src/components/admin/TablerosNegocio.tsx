@@ -29,6 +29,8 @@ export function TablerosNegocio({ datos }: { datos: TableroNegocio }) {
   const [profesionalId, setProfesionalId] = useState("");
   const [paciente, setPaciente] = useState("");
   const [medio, setMedio] = useState("");
+  const [corteAtencion, setCorteAtencion] = useState<"profesional" | "paciente" | "producto">("profesional");
+  const [corteCobro, setCorteCobro] = useState<"profesional" | "paciente" | "medio" | "producto">("profesional");
   const [abierto, setAbierto] = useState("");
 
   const enPeriodo = (mes: string) => (!desde || mes >= desde) && (!hasta || mes <= hasta);
@@ -49,30 +51,33 @@ export function TablerosNegocio({ datos }: { datos: TableroNegocio }) {
   }, [datos.visitas, desde, hasta, profesionalId, paciente]);
 
   const atenciones = useMemo(() => {
-    const grupos = new Map<string, { profesionalId: string; mes: string; atenciones: number }>();
+    const grupos = new Map<string, { etiqueta: string; mes: string; atenciones: number }>();
     for (const fila of datos.atenciones) {
       if (!enPeriodo(fila.mes) || !delProfesional(fila.profesionalId)) continue;
-      const clave = `${fila.profesionalId}|${fila.mes}`;
-      const actual = grupos.get(clave) ?? { profesionalId: fila.profesionalId, mes: fila.mes, atenciones: 0 };
+      const etiqueta = corteAtencion === "paciente" ? fila.paciente : corteAtencion === "producto" ? fila.producto : nombreProf(datos, fila.profesionalId);
+      const clave = `${etiqueta}|${fila.mes}`;
+      const actual = grupos.get(clave) ?? { etiqueta, mes: fila.mes, atenciones: 0 };
       actual.atenciones += 1;
       grupos.set(clave, actual);
     }
     return [...grupos.values()].sort((a, b) => b.mes.localeCompare(a.mes) || b.atenciones - a.atenciones);
-  }, [datos.atenciones, desde, hasta, profesionalId]);
+  }, [datos, desde, hasta, profesionalId, corteAtencion]);
 
   const recaudacion = useMemo(() => {
-    const grupos = new Map<string, { profesionalId: string; mes: string; importe: number; medios: Map<string, number> }>();
+    const grupos = new Map<string, { etiqueta: string; mes: string; importe: number; medios: Map<string, number> }>();
     for (const fila of datos.cobros) {
       if (!enPeriodo(fila.mes) || !delProfesional(fila.profesionalId)) continue;
       if (medio && fila.medio !== medio) continue;
-      const clave = `${fila.profesionalId}|${fila.mes}`;
-      const actual = grupos.get(clave) ?? { profesionalId: fila.profesionalId, mes: fila.mes, importe: 0, medios: new Map() };
+      const etiqueta =
+        corteCobro === "paciente" ? fila.paciente : corteCobro === "producto" ? fila.producto : corteCobro === "medio" ? fila.medio : nombreProf(datos, fila.profesionalId);
+      const clave = `${etiqueta}|${fila.mes}`;
+      const actual = grupos.get(clave) ?? { etiqueta, mes: fila.mes, importe: 0, medios: new Map() };
       actual.importe += fila.importe;
       actual.medios.set(fila.medio, (actual.medios.get(fila.medio) ?? 0) + fila.importe);
       grupos.set(clave, actual);
     }
     return [...grupos.values()].sort((a, b) => b.mes.localeCompare(a.mes) || b.importe - a.importe);
-  }, [datos.cobros, desde, hasta, profesionalId, medio]);
+  }, [datos, desde, hasta, profesionalId, medio, corteCobro]);
 
   const medios = useMemo(() => [...new Set(datos.cobros.map((fila) => fila.medio))].sort((a, b) => a.localeCompare(b, "es")), [datos.cobros]);
   const maxVisitas = Math.max(1, ...visitas.map((fila) => fila.visitas));
@@ -119,12 +124,17 @@ export function TablerosNegocio({ datos }: { datos: TableroNegocio }) {
         )}
       </Seccion>
 
-      <Seccion titulo="Atenciones por mes por profesional" detalle="Tratamientos registrados en el mes.">
+      <Seccion titulo="Atenciones por mes" detalle="Tratamientos registrados. El corte puede ser profesional, paciente o producto.">
+        <Corte
+          value={corteAtencion}
+          onChange={(value) => setCorteAtencion(value as typeof corteAtencion)}
+          opciones={[["profesional", "Profesional"], ["paciente", "Paciente"], ["producto", "Producto"]]}
+        />
         {atenciones.length === 0 ? <Vacio /> : (
-          <Tabla encabezados={["Profesional", "Mes", "Atenciones"]}>
+          <Tabla encabezados={["Corte", "Mes", "Atenciones"]}>
             {atenciones.map((fila) => (
-              <tr key={`${fila.profesionalId}-${fila.mes}`} className="border-t border-slate-100">
-                <td className="px-4 py-2">{nombreProf(datos, fila.profesionalId)}</td>
+              <tr key={`${fila.etiqueta}-${fila.mes}`} className="border-t border-slate-100">
+                <td className="px-4 py-2">{fila.etiqueta}</td>
                 <td className="px-4 py-2">{etiquetaMes(fila.mes)}</td>
                 <td className="px-4 py-2"><Barra valor={fila.atenciones} max={maxAtenciones} /></td>
               </tr>
@@ -133,7 +143,12 @@ export function TablerosNegocio({ datos }: { datos: TableroNegocio }) {
         )}
       </Seccion>
 
-      <Seccion titulo="Recaudación por mes por profesional" detalle="Importe cobrado. Abrí una fila para ver el medio de cobro.">
+      <Seccion titulo="Recaudación por mes" detalle="Importe cobrado. El producto sale del tratamiento asociado al cobro. Abrí una fila para ver el medio.">
+        <Corte
+          value={corteCobro}
+          onChange={(value) => { setCorteCobro(value as typeof corteCobro); setAbierto(""); }}
+          opciones={[["profesional", "Profesional"], ["paciente", "Paciente"], ["producto", "Producto"], ["medio", "Medio de cobro"]]}
+        />
         <label className="mb-3 flex max-w-xs flex-col gap-1 text-xs font-medium text-slate-600">
           Medio de cobro
           <select value={medio} onChange={(e) => setMedio(e.target.value)} className="rounded-lg border border-slate-300 px-2 py-2 text-sm">
@@ -144,14 +159,14 @@ export function TablerosNegocio({ datos }: { datos: TableroNegocio }) {
           </select>
         </label>
         {recaudacion.length === 0 ? <Vacio /> : (
-          <Tabla encabezados={["Profesional", "Mes", "Recaudación"]}>
+          <Tabla encabezados={["Corte", "Mes", "Recaudación"]}>
             {recaudacion.map((fila) => {
-              const clave = `${fila.profesionalId}|${fila.mes}`;
+              const clave = `${fila.etiqueta}|${fila.mes}`;
               const abierta = abierto === clave;
               return (
                 <Fragment key={clave}>
                   <tr className="border-t border-slate-100">
-                    <td className="px-4 py-2">{nombreProf(datos, fila.profesionalId)}</td>
+                    <td className="px-4 py-2">{fila.etiqueta}</td>
                     <td className="px-4 py-2">{etiquetaMes(fila.mes)}</td>
                     <td className="px-4 py-2">
                       <button type="button" className="font-medium text-[#1D4ED8]" onClick={() => setAbierto(abierta ? "" : clave)}>
@@ -180,6 +195,17 @@ export function TablerosNegocio({ datos }: { datos: TableroNegocio }) {
         )}
       </Seccion>
     </div>
+  );
+}
+
+function Corte({ value, onChange, opciones }: { value: string; onChange: (value: string) => void; opciones: [string, string][] }) {
+  return (
+    <label className="mb-3 flex max-w-xs flex-col gap-1 text-xs font-medium text-slate-600">
+      Corte
+      <select value={value} onChange={(e) => onChange(e.target.value)} className="rounded-lg border border-slate-300 px-2 py-2 text-sm">
+        {opciones.map(([id, label]) => <option key={id} value={id}>{label}</option>)}
+      </select>
+    </label>
   );
 }
 
