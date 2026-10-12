@@ -145,7 +145,7 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
           nacimiento: datosNuevos ? nacimiento : "",
         }),
       });
-      const data = (await response.json()) as { idTurno?: string; needsData?: boolean; error?: string };
+      const data = (await response.json()) as { idTurno?: string; nombre?: string; needsData?: boolean; error?: string };
       if (data.needsData) {
         setNuevo(true);
         setPaso("datos");
@@ -156,6 +156,7 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
         return;
       }
       setNuevo(datosNuevos);
+      if (data.nombre?.trim()) setNombre(data.nombre.trim());
       setIdTurno(data.idTurno);
       setPaso("listo");
     } catch {
@@ -167,6 +168,46 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
 
   function seguirDni() {
     void reservar(false);
+  }
+
+  function agregarAAgenda() {
+    if (!slot) return;
+    const inicio = new Date(slot);
+    const minutos = profesional?.duracionMin ?? clinica.duracionMin;
+    const fin = new Date(inicio.getTime() + minutos * 60_000);
+    const marca = (fecha: Date) => fecha.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+    const ics = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//Clinex//Turno//ES",
+      "CALSCALE:GREGORIAN",
+      "BEGIN:VEVENT",
+      `UID:${idTurno || inicio.toISOString()}@clinex`,
+      `DTSTAMP:${marca(new Date())}`,
+      `DTSTART:${marca(inicio)}`,
+      `DTEND:${marca(fin)}`,
+      `SUMMARY:Turno en ${clinica.nombre}`,
+      `DESCRIPTION:Turno con ${profesional?.nombre ?? "la clínica"}. Pendiente de pago de seña.`,
+      "BEGIN:VALARM",
+      "TRIGGER:-P1D",
+      "ACTION:DISPLAY",
+      "DESCRIPTION:Tu turno es en 24 horas",
+      "END:VALARM",
+      "BEGIN:VALARM",
+      "TRIGGER:-PT2H",
+      "ACTION:DISPLAY",
+      "DESCRIPTION:Tu turno es en 2 horas",
+      "END:VALARM",
+      "END:VEVENT",
+      "END:VCALENDAR",
+    ].join("\r\n");
+    const archivo = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(archivo);
+    const enlace = document.createElement("a");
+    enlace.href = url;
+    enlace.download = "turno-clinex.ics";
+    enlace.click();
+    URL.revokeObjectURL(url);
   }
 
   useEffect(() => {
@@ -230,6 +271,19 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
       </header>
       <p className="mt-6 text-xs font-semibold uppercase tracking-wide text-[#10B981]">Reservar turno:</p>
       <p className="mt-1 text-lg font-semibold">{clinica.nombre}</p>
+      {paso === "listo" && (
+        <div className="mt-4">
+          <p className="text-lg font-semibold">Hola: {nombre.trim()}</p>
+          <p className="mt-1 text-sm text-slate-700">Tu turno está Reservado en estado pendiente de pago seña.</p>
+          <button
+            type="button"
+            onClick={agregarAAgenda}
+            className="mt-3 rounded-lg bg-[#10B981] px-4 py-3 text-sm font-semibold text-white"
+          >
+            Agrega este evento a tu agenda
+          </button>
+        </div>
+      )}
       {clinica.aviso && <p className="mt-3 text-sm text-slate-500">{clinica.aviso}</p>}
 
       {paso === "profesional" && (

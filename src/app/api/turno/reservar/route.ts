@@ -123,5 +123,6 @@ export async function POST(request: Request) {
   });
   if (turno.error) return NextResponse.json({ error: turno.error.message }, { status: 400 });
 
-  return NextResponse.json({ idTurno });
+  const nombrePaciente = String(existente?.nombre || body.nombre || "").trim();
+  return NextResponse.json({ idTurno, nombre: nombrePaciente });
 }

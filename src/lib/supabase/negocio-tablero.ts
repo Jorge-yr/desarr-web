@@ -14,6 +14,7 @@ export type AtencionFila = {
   paciente: string;
   productoId: string;
   producto: string;
+  categoria: string;
 };
 
 export type CobroFila = {
@@ -23,12 +24,14 @@ export type CobroFila = {
   paciente: string;
   productoId: string;
   producto: string;
+  categoria: string;
   medio: string;
   importe: number;
 };
 
 export type TableroNegocio = {
   profesionales: { id: string; nombre: string }[];
+  categorias: string[];
   visitas: VisitaFila[];
   atenciones: AtencionFila[];
   cobros: CobroFila[];
@@ -48,7 +51,7 @@ function nombreDe(row: { nombre?: string | null; apellido?: string | null; nombr
 }
 
 export async function cargarTableroNegocio(idClinica: string): Promise<TableroNegocio> {
-  const vacio: TableroNegocio = { profesionales: [], visitas: [], atenciones: [], cobros: [], aviso: null };
+  const vacio: TableroNegocio = { profesionales: [], categorias: [], visitas: [], atenciones: [], cobros: [], aviso: null };
   const supabase = createServiceClient();
   if (!supabase) return { ...vacio, aviso: "Falta la clave de servicio para leer los tableros." };
 
@@ -59,7 +62,7 @@ export async function cargarTableroNegocio(idClinica: string): Promise<TableroNe
     supabase.from("tratamientos_realizados").select("id_tratamiento, fecha_tratamiento, id_profesional, id_paciente, id_producto").eq("id_clinica", idClinica).limit(5000),
     supabase.from("historial_cobros").select("fecha_mov_cobro, importe, id_transaccion, id_paciente, id_tratamiento, medio_cobro, id_medio_cobro").eq("id_clinica", idClinica).limit(5000),
     supabase.from("movimientos").select("id_transaccion, id_profesional").eq("id_clinica", idClinica).limit(5000),
-    supabase.from("productos").select("id_producto, producto").eq("id_clinica", idClinica).limit(5000),
+    supabase.from("productos").select("id_producto, producto, categoria_principal").eq("id_clinica", idClinica).limit(5000),
   ]);
 
   const error = profesionales.error || turnos.error || pacientes.error || tratamientos.error || cobros.error || movimientos.error || productos.error;
@@ -74,8 +77,16 @@ export async function cargarTableroNegocio(idClinica: string): Promise<TableroNe
     nombresPac.set(String(row.id_paciente), nombreDe(row) || String(row.id_paciente));
   }
   const nombresProd = new Map<string, string>();
+  const categoriaPorProducto = new Map<string, string>();
+  const categorias = new Set<string>();
   for (const row of productos.data ?? []) {
-    nombresProd.set(String(row.id_producto), String(row.producto || row.id_producto));
+    const id = String(row.id_producto);
+    nombresProd.set(id, String(row.producto || id));
+    const categoria = String(row.categoria_principal ?? "").trim();
+    if (categoria) {
+      categoriaPorProducto.set(id, categoria);
+      categorias.add(categoria);
+    }
   }
   const productoPorTratamiento = new Map<string, string>();
   const profPorMovimiento = new Map<string, string>();
@@ -111,6 +122,7 @@ export async function cargarTableroNegocio(idClinica: string): Promise<TableroNe
       paciente: nombresPac.get(pacienteId) || pacienteId || "Sin paciente",
       productoId,
       producto: nombresProd.get(productoId) || productoId || "Sin producto",
+      categoria: categoriaPorProducto.get(productoId) || "Sin categoría",
     });
   }
 
@@ -129,6 +141,7 @@ export async function cargarTableroNegocio(idClinica: string): Promise<TableroNe
       paciente: nombresPac.get(pacienteId) || pacienteId || "Sin paciente",
       productoId,
       producto: nombresProd.get(productoId) || productoId || "Sin producto",
+      categoria: categoriaPorProducto.get(productoId) || "Sin categoría",
       medio: String(row.medio_cobro || row.id_medio_cobro || "Sin medio"),
       importe: Number(row.importe ?? 0),
     });
@@ -136,6 +149,7 @@ export async function cargarTableroNegocio(idClinica: string): Promise<TableroNe
 
   return {
     profesionales: [...nombresProf.entries()].map(([id, nombre]) => ({ id, nombre })).sort((a, b) => a.nombre.localeCompare(b.nombre, "es")),
+    categorias: [...categorias].sort((a, b) => a.localeCompare(b, "es")),
     visitas,
     atenciones,
     cobros: cobrosFilas,
