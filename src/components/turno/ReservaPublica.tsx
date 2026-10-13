@@ -49,6 +49,7 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
   const [initPoint, setInitPoint] = useState("");
   const [qrPago, setQrPago] = useState("");
   const [esEscritorio, setEsEscritorio] = useState(false);
+  const [agendaEnMovil, setAgendaEnMovil] = useState(false);
   const [errorPago, setErrorPago] = useState("");
   const [ocupados, setOcupados] = useState<Ocupado[] | null>(null);
   const [avisoOcupados, setAvisoOcupados] = useState("");
@@ -213,6 +214,7 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
   useEffect(() => {
     const movil = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
     setEsEscritorio(!movil);
+    setAgendaEnMovil(/Android|iPhone|iPad|iPod/i.test(navigator.userAgent));
   }, []);
 
   useEffect(() => {
@@ -271,19 +273,7 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
       </header>
       <p className="mt-6 text-xs font-semibold uppercase tracking-wide text-[#10B981]">Reservar turno:</p>
       <p className="mt-1 text-lg font-semibold">{clinica.nombre}</p>
-      {paso === "listo" && (
-        <div className="mt-4">
-          <p className="text-lg font-semibold">Hola: {nombre.trim()}</p>
-          <p className="mt-1 text-sm text-slate-700">Tu turno está Reservado en estado pendiente de pago seña.</p>
-          <button
-            type="button"
-            onClick={agregarAAgenda}
-            className="mt-3 rounded-lg bg-[#10B981] px-4 py-3 text-sm font-semibold text-white"
-          >
-            Agrega este evento a tu agenda
-          </button>
-        </div>
-      )}
+      {paso === "listo" && <p className="mt-4 text-lg font-semibold">Hola: {nombre.trim()}</p>}
       {clinica.aviso && <p className="mt-3 text-sm text-slate-500">{clinica.aviso}</p>}
 
       {paso === "profesional" && (
@@ -467,11 +457,20 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
       )}
 
       {paso === "listo" && (
-        <section className="mt-6 rounded-2xl bg-white p-5 shadow-sm">
-          <h2 className="text-lg font-semibold">Turno reservado para la seña</h2>
-          <p className="mt-2 text-sm text-slate-600">{profesional?.nombre}</p>
+        <section className="mt-4 rounded-2xl bg-white p-5 shadow-sm">
+          <h2 className="text-sm font-medium text-slate-800">Tu turno está Reservado en Estado pendiente de pago seña:</h2>
+          <p className="mt-3 text-sm font-semibold text-slate-900">Profesional: {profesional?.nombre}</p>
           <p className="text-sm">{elegido?.etiqueta}</p>
           <p className="mt-2 text-sm">DNI {dni.replace(/\D/g, "")}</p>
+          {agendaEnMovil && (
+            <button
+              type="button"
+              onClick={agregarAAgenda}
+              className="mt-4 rounded-lg bg-[#10B981] px-4 py-3 text-sm font-semibold text-white"
+            >
+              Agrega este evento a tu agenda
+            </button>
+          )}
           {nuevo && (
             <p className="text-sm">
               {nombre} {apellido} · {whatsapp} · {nacimiento}
