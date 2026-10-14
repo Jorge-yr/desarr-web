@@ -49,6 +49,7 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
   const [initPoint, setInitPoint] = useState("");
   const [qrPago, setQrPago] = useState("");
   const [esEscritorio, setEsEscritorio] = useState(false);
+  const [agendaEnMovil, setAgendaEnMovil] = useState(false);
   const [errorPago, setErrorPago] = useState("");
   const [ocupados, setOcupados] = useState<Ocupado[] | null>(null);
   const [avisoOcupados, setAvisoOcupados] = useState("");
@@ -213,6 +214,7 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
   useEffect(() => {
     const movil = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
     setEsEscritorio(!movil);
+    setAgendaEnMovil(/Android|iPhone|iPad|iPod/i.test(navigator.userAgent));
   }, []);
 
   useEffect(() => {
@@ -271,19 +273,7 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
       </header>
       <p className="mt-6 text-xs font-semibold uppercase tracking-wide text-[#10B981]">Reservar turno:</p>
       <p className="mt-1 text-lg font-semibold">{clinica.nombre}</p>
-      {paso === "listo" && (
-        <div className="mt-4">
-          <p className="text-lg font-semibold">Hola: {nombre.trim()}</p>
-          <p className="mt-1 text-sm text-slate-700">Tu turno está Reservado en estado pendiente de pago seña.</p>
-          <button
-            type="button"
-            onClick={agregarAAgenda}
-            className="mt-3 rounded-lg bg-[#10B981] px-4 py-3 text-sm font-semibold text-white"
-          >
-            Agrega este evento a tu agenda
-          </button>
-        </div>
-      )}
+      {paso === "listo" && <p className="mt-4 text-lg font-semibold">Hola: {nombre.trim()}</p>}
       {clinica.aviso && <p className="mt-3 text-sm text-slate-500">{clinica.aviso}</p>}
 
       {paso === "profesional" && (
@@ -424,58 +414,97 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
       )}
 
       {paso === "datos" && (
-        <section className="mt-6 flex flex-col gap-3">
-          <p className="text-sm text-slate-600">No encontramos ese DNI en esta clínica. Completá tus datos.</p>
-          <input
-            placeholder="Nombre"
-            value={nombre}
-            onChange={(e) => setNombre(e.target.value)}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-3"
-          />
-          <input
-            placeholder="Apellido"
-            value={apellido}
-            onChange={(e) => setApellido(e.target.value)}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-3"
-          />
-          <input
-            placeholder="WhatsApp"
-            value={whatsapp}
-            onChange={(e) => setWhatsapp(e.target.value)}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-3"
-          />
-          <label className="flex flex-col gap-1 text-sm text-slate-600">
+        <section className="mt-6">
+          <button type="button" className="text-sm text-teal-800" onClick={() => setPaso("dni")}>
+            Cambiar DNI
+          </button>
+          <p className="mt-3 text-sm text-slate-600">{profesional?.nombre}</p>
+          <p className="text-sm font-medium">{elegido?.etiqueta}</p>
+          <p className="mt-4 text-sm text-slate-600">
+            Es tu primera vez en esta clínica. Completá tus datos para reservar el turno.
+          </p>
+          <label className="mt-4 flex flex-col gap-1 text-sm">
+            <span>DNI</span>
+            <input
+              value={dni.replace(/\D/g, "")}
+              readOnly
+              className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 text-base text-slate-600"
+            />
+          </label>
+          <label className="mt-4 flex flex-col gap-1 text-sm">
+            <span>Nombre</span>
+            <input
+              autoComplete="given-name"
+              value={nombre}
+              onChange={(e) => setNombre(e.target.value)}
+              className="rounded-lg border border-slate-300 bg-white px-3 py-3 text-base"
+            />
+          </label>
+          <label className="mt-4 flex flex-col gap-1 text-sm">
+            <span>Apellido</span>
+            <input
+              autoComplete="family-name"
+              value={apellido}
+              onChange={(e) => setApellido(e.target.value)}
+              className="rounded-lg border border-slate-300 bg-white px-3 py-3 text-base"
+            />
+          </label>
+          <label className="mt-4 flex flex-col gap-1 text-sm">
+            <span>WhatsApp</span>
+            <input
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              placeholder="Ej: 379 400-1206"
+              value={whatsapp}
+              onChange={(e) => setWhatsapp(e.target.value)}
+              className="rounded-lg border border-slate-300 bg-white px-3 py-3 text-base"
+            />
+          </label>
+          <label className="mt-4 flex flex-col gap-1 text-sm">
             <span>Fecha de nacimiento</span>
             <input
               type="date"
               value={nacimiento}
               max={new Date().toISOString().slice(0, 10)}
               onChange={(e) => setNacimiento(e.target.value)}
-              className="rounded-lg border border-slate-300 bg-white px-3 py-3"
+              className="rounded-lg border border-slate-300 bg-white px-3 py-3 text-base"
             />
           </label>
           <button
             type="button"
             disabled={!nombre.trim() || !apellido.trim() || whatsapp.trim().length < 8 || !nacimiento || guardando}
             onClick={() => void reservar(true)}
-            className="rounded-lg bg-teal-700 px-4 py-3 text-sm font-semibold text-white disabled:opacity-50"
+            className="mt-4 w-full rounded-lg bg-teal-700 px-4 py-3 text-sm font-semibold text-white disabled:opacity-60"
           >
             {guardando ? "Guardando turno…" : "Continuar"}
           </button>
-          {errorTurno && <p className="text-sm text-red-700">{errorTurno}</p>}
+          {errorTurno && <p className="mt-3 text-sm text-red-700">{errorTurno}</p>}
         </section>
       )}
 
       {paso === "listo" && (
-        <section className="mt-6 rounded-2xl bg-white p-5 shadow-sm">
-          <h2 className="text-lg font-semibold">Turno reservado para la seña</h2>
-          <p className="mt-2 text-sm text-slate-600">{profesional?.nombre}</p>
+        <section className="mt-4 rounded-2xl bg-white p-5 shadow-sm">
+          <h2 className="text-sm font-medium text-slate-800">Tu turno está Reservado en Estado pendiente de pago seña:</h2>
+          <p className="mt-3 text-sm font-semibold text-slate-900">Profesional: {profesional?.nombre}</p>
           <p className="text-sm">{elegido?.etiqueta}</p>
           <p className="mt-2 text-sm">DNI {dni.replace(/\D/g, "")}</p>
           {nuevo && (
-            <p className="text-sm">
-              {nombre} {apellido} · {whatsapp} · {nacimiento}
-            </p>
+            <>
+              <p className="text-sm">
+                {nombre.trim()} {apellido.trim()}
+              </p>
+              <p className="text-sm text-slate-600">WhatsApp {whatsapp.trim()}</p>
+            </>
+          )}
+          {agendaEnMovil && (
+            <button
+              type="button"
+              onClick={agregarAAgenda}
+              className="mt-4 rounded-lg bg-[#10B981] px-4 py-3 text-sm font-semibold text-white"
+            >
+              Agrega este evento a tu agenda
+            </button>
           )}
           <p className="mt-4 text-sm text-slate-500">
             Seña {sena > 0 ? `ARS ${sena}` : "sin importe configurado"}. El turno queda pendiente hasta que Mercado
