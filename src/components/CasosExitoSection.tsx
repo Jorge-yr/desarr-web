@@ -9,9 +9,26 @@ type Caso = {
   videoUrl?: string;
   videoSrc?: string;
   poster?: string;
+  // true para videos horizontales (16:9); por defecto vertical (Shorts, 9:16)
+  horizontal?: boolean;
 };
 
 const CASOS: Caso[] = [
+  {
+    name: "Gestión de Turnos Web",
+    tag: "App a Medida",
+    tagColor: "bg-[#7C3AED]/10 text-[#7C3AED]",
+    description:
+      "Sistema de turnos online conectado a Mercado Pago u otras billeteras virtuales. El cobro de la seña se valida solo por API: tus turnos y cobranzas se gestionan solos.",
+    highlights: [
+      "Días, horarios e importe configurables desde el panel de administrador",
+      "Turnos en 2 estados: pendiente de pago o reservado con seña",
+      "Cobro validado automáticamente por API",
+    ],
+    videoUrl: "https://www.youtube.com/embed/A3TFpJ1VSOE",
+    videoTitle: "Sistema de gestión de turnos web - Desarr Soluciones",
+    horizontal: true,
+  },
   {
     name: "Liquidador",
     tag: "Conciliaciones",
@@ -75,7 +92,11 @@ export default function CasosExitoSection() {
                 ))}
               </ul>
             )}
-            <div className="mx-auto aspect-[9/16] w-full max-w-[280px] overflow-hidden rounded-xl bg-black">
+            <div
+              className={`mx-auto w-full overflow-hidden rounded-xl bg-black ${
+                caso.horizontal ? "aspect-video" : "aspect-[9/16] max-w-[280px]"
+              }`}
+            >
               {caso.videoSrc ? (
                 <video
                   src={caso.videoSrc}
