@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { vencerPendientes } from "@/lib/turno/limites";
 import { filasAOcupados } from "@/lib/turno/ocupados";
 
 export const dynamic = "force-dynamic";
@@ -31,9 +32,11 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "No se pueden leer los turnos ocupados." }, { status: 503 });
   }
 
+  await vencerPendientes(supabase, idProfesional);
+
   const { data, error } = await supabase
     .from("historial_turnos")
-    .select("fecha_turno, hora_turno, fecha_hora_turno, finaliza_turno, duracion_turno, estado_turno")
+    .select("fecha_hora, fecha_turno, hora_turno, fecha_hora_turno, finaliza_turno, duracion_turno, estado_turno")
     .eq("id_profesional", idProfesional);
 
   if (error) {

@@ -1,8 +1,10 @@
 import type { Ocupado } from "@/lib/turno/huecos";
+import { pendienteVencido } from "@/lib/turno/reglas";
 
 const ZONA = "America/Argentina/Buenos_Aires";
 
 export type FilaTurno = {
+  fecha_hora?: unknown;
   fecha_turno?: unknown;
   hora_turno?: unknown;
   fecha_hora_turno?: unknown;
@@ -27,6 +29,7 @@ export function filasAOcupados(filas: FilaTurno[], duracionDefecto: number, dias
   for (const turno of filas) {
     const estado = String(turno.estado_turno ?? "").trim().toLowerCase();
     if (!estado || estado.startsWith("cancel")) continue;
+    if (pendienteVencido(turno.estado_turno, turno.fecha_hora)) continue;
     const inicio = inicioDelTurno(turno);
     const fin = finDelTurno(turno, inicio, duracionDefecto);
     if (!inicio || !fin || !esPosterior(inicio, fin)) continue;

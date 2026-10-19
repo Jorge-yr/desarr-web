@@ -2,7 +2,19 @@ import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { fechaDeRegistro } from "@/lib/turno/ahora";
 import { seSolapa } from "@/lib/turno/huecos";
+import {
+  hashDeIp,
+  intentosRecientes,
+  ipDeSolicitud,
+  registrarIntento,
+  registrarReserva,
+  turnosPendientesDeIp,
+  vencerPendientes,
+} from "@/lib/turno/limites";
+import { formatoCapital } from "@/lib/turno/nombre";
 import { filasAOcupados } from "@/lib/turno/ocupados";
+import { ESTADO_PENDIENTE, MAX_INTENTOS_POR_IP, MAX_TURNOS_PENDIENTES_POR_IP } from "@/lib/turno/reglas";
+import { verificarTurnstile } from "@/lib/turno/turnstile";
 
 type Body = {
   idClinica?: string;
@@ -14,6 +26,7 @@ type Body = {
   apellido?: string;
   whatsapp?: string;
   nacimiento?: string;
+  turnstileToken?: string;
 };
 
 function enArgentina(iso: string) {
@@ -38,16 +51,42 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "No se puede guardar el turno." }, { status: 503 });
   }
 
-  const body = (await request.json()) as Body;
+  const body = (await request.json().catch(() => ({}))) as Body;
   const dni = String(body.dni ?? "").replace(/\D/g, "");
   const duracion = Number(body.duracionMin) > 0 ? Number(body.duracionMin) : 30;
-  if (!body.idClinica || !body.idProfesional || !body.inicio || dni.length < 7) {
+  const nombre = formatoCapital(String(body.nombre ?? "")).slice(0, 60);
+  if (!body.idClinica || !body.idProfesional || !body.inicio || dni.length < 7 || dni.length > 9) {
     return NextResponse.json({ error: "Faltan datos del turno." }, { status: 400 });
+  }
+  if (nombre.length < 2) {
+    return NextResponse.json({ error: "Ingresá tu nombre." }, { status: 400 });
+  }
+
+  const ip = ipDeSolicitud(request);
+  const ipHash = ip ? hashDeIp(ip) : null;
+
+  if (!(await verificarTurnstile(body.turnstileToken, ip))) {
+    return NextResponse.json(
+      { error: "No pudimos verificar que sos una persona. Esperá un momento e intentá de nuevo." },
+      { status: 403 },
+    );
+  }
+
+  if (ipHash) {
+    const pendientes = await turnosPendientesDeIp(supabase, ipHash);
+    if (pendientes !== null && pendientes >= MAX_TURNOS_PENDIENTES_POR_IP) {
+      return NextResponse.json(
+        {
+          error: `Ya hay ${MAX_TURNOS_PENDIENTES_POR_IP} turnos pendientes de pago desde esta conexión. Pagá la seña o esperá 24 horas.`,
+        },
+        { status: 429 },
+      );
+    }
   }
 
   const { data: existente } = await supabase
     .from("pacientes")
-    .select("id_paciente, nombre, apellido")
+    .select("id_paciente")
     .eq("id_clinica", body.idClinica)
     .eq("dni", dni)
     .maybeSingle();
@@ -55,22 +94,33 @@ export async function POST(request: Request) {
   let idPaciente = existente?.id_paciente as string | undefined;
   if (!idPaciente) {
     const nacimiento = String(body.nacimiento ?? "").slice(0, 10);
+    const apellido = formatoCapital(String(body.apellido ?? "")).slice(0, 60);
     const fechaOk =
       /^\d{4}-\d{2}-\d{2}$/.test(nacimiento) &&
       !Number.isNaN(new Date(`${nacimiento}T00:00:00`).getTime()) &&
       nacimiento <= enArgentina(new Date().toISOString()).fecha;
-    if (!body.nombre?.trim() || !body.apellido?.trim() || !fechaOk) {
+    if (!apellido || !fechaOk) {
+      if (ipHash) {
+        const intentos = await intentosRecientes(supabase, ipHash);
+        if (intentos !== null && intentos >= MAX_INTENTOS_POR_IP) {
+          return NextResponse.json(
+            { error: "Demasiados intentos con un DNI que no encontramos. Probá de nuevo en una hora." },
+            { status: 429 },
+          );
+        }
+        await registrarIntento(supabase, ipHash);
+      }
       return NextResponse.json({ needsData: true });
     }
     idPaciente = crypto.randomUUID();
     const { error } = await supabase.from("pacientes").insert({
       id_paciente: idPaciente,
       dni,
-      nombre: body.nombre.trim(),
-      apellido: body.apellido.trim(),
+      nombre,
+      apellido,
       fecha_nacimiento: nacimiento,
       nacimiento: Number(nacimiento.slice(0, 4)),
-      telefono_paciente: body.whatsapp?.trim() || null,
+      telefono_paciente: String(body.whatsapp ?? "").trim().slice(0, 30) || null,
       id_clinica: body.idClinica,
       fecha_alta: enArgentina(new Date().toISOString()).fecha,
     });
@@ -78,9 +128,10 @@ export async function POST(request: Request) {
   }
 
   const cuando = enArgentina(body.inicio);
+  await vencerPendientes(supabase, body.idProfesional);
   const { data: tomados, error: errorTomados } = await supabase
     .from("historial_turnos")
-    .select("estado_turno, duracion_turno, fecha_turno, hora_turno, fecha_hora_turno, finaliza_turno")
+    .select("fecha_hora, estado_turno, duracion_turno, fecha_turno, hora_turno, fecha_hora_turno, finaliza_turno")
     .eq("id_profesional", body.idProfesional);
   if (errorTomados) return NextResponse.json({ error: "No se pudo verificar si el horario está libre." }, { status: 400 });
   const pedido = horaAMinutos(cuando.hora);
@@ -117,12 +168,14 @@ export async function POST(request: Request) {
     fecha_hora_turno: cuando.marca,
     duracion_turno: duracion,
     finaliza_turno: enArgentina(fin.toISOString()).marca,
-    estado_turno: "Pendiente en Turnero Web",
+    estado_turno: ESTADO_PENDIENTE,
     origen_turno: "Web",
     fecha_hora: fechaTurno,
   });
   if (turno.error) return NextResponse.json({ error: turno.error.message }, { status: 400 });
 
-  const nombrePaciente = String(existente?.nombre || body.nombre || "").trim();
-  return NextResponse.json({ idTurno, nombre: nombrePaciente });
+  if (ipHash) await registrarReserva(supabase, idTurno, ipHash);
+
+  // El nombre que se devuelve es el que escribió la persona, nunca el guardado en la base.
+  return NextResponse.json({ idTurno, nombre });
 }

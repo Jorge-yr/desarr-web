@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ClinicaPublica } from "@/lib/supabase/public-clinic";
 import { aplicarOcupados, type Ocupado } from "@/lib/turno/huecos";
+import { formatoCapital } from "@/lib/turno/nombre";
+import { TurnstileWidget } from "@/components/turno/TurnstileWidget";
 
 type Paso = "profesional" | "horario" | "dni" | "datos" | "listo";
 
@@ -32,8 +34,17 @@ function diaSemanaEnArgentina(iso: string) {
   return indice;
 }
 
-export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
+export function ReservaPublica({
+  clinica,
+  turnstileSiteKey,
+}: {
+  clinica: ClinicaPublica;
+  turnstileSiteKey?: string;
+}) {
   const [paso, setPaso] = useState<Paso>("profesional");
+  const [tokenTurnstile, setTokenTurnstile] = useState("");
+  const [reinicioTurnstile, setReinicioTurnstile] = useState(0);
+  const verificacionPendiente = Boolean(turnstileSiteKey) && !tokenTurnstile;
   const [profId, setProfId] = useState("");
   const [slot, setSlot] = useState("");
   const [dni, setDni] = useState("");
@@ -140,10 +151,11 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
           inicio: slot,
           duracionMin: profesional?.duracionMin ?? clinica.duracionMin,
           dni: limpio,
-          nombre: datosNuevos ? nombre : "",
-          apellido: datosNuevos ? apellido : "",
+          nombre: formatoCapital(nombre),
+          apellido: datosNuevos ? formatoCapital(apellido) : "",
           whatsapp: datosNuevos ? whatsapp : "",
           nacimiento: datosNuevos ? nacimiento : "",
+          turnstileToken: tokenTurnstile,
         }),
       });
       const data = (await response.json()) as { idTurno?: string; nombre?: string; needsData?: boolean; error?: string };
@@ -157,13 +169,18 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
         return;
       }
       setNuevo(datosNuevos);
-      if (data.nombre?.trim()) setNombre(data.nombre.trim());
+      setNombre(formatoCapital(data.nombre?.trim() || nombre));
       setIdTurno(data.idTurno);
       setPaso("listo");
     } catch {
       setErrorTurno("No se pudo guardar el turno.");
     } finally {
       setGuardando(false);
+      // El código se usa una sola vez: se pide uno nuevo para el próximo envío.
+      if (turnstileSiteKey) {
+        setTokenTurnstile("");
+        setReinicioTurnstile((n) => n + 1);
+      }
     }
   }
 
@@ -235,8 +252,8 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
             duracionMin: profesional?.duracionMin ?? clinica.duracionMin,
             inicio: slot,
             dni,
-            nombre,
-            apellido,
+            nombre: formatoCapital(nombre),
+            apellido: formatoCapital(apellido),
             whatsapp,
             importe: sena,
             idTurno,
@@ -273,7 +290,7 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
       </header>
       <p className="mt-6 text-xs font-semibold uppercase tracking-wide text-[#10B981]">Reservar turno:</p>
       <p className="mt-1 text-lg font-semibold">{clinica.nombre}</p>
-      {paso === "listo" && <p className="mt-4 text-lg font-semibold">Hola: {nombre.trim()}</p>}
+      {paso === "listo" && <p className="mt-4 text-lg font-semibold">Hola: {formatoCapital(nombre)}</p>}
       {clinica.aviso && <p className="mt-3 text-sm text-slate-500">{clinica.aviso}</p>}
 
       {paso === "profesional" && (
@@ -401,10 +418,25 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
               className="rounded-lg border border-slate-300 bg-white px-3 py-3 text-base"
             />
           </label>
+          <label className="mt-3 flex flex-col gap-1 text-sm">
+            <span>Nombre</span>
+            <input
+              autoComplete="given-name"
+              value={nombre}
+              maxLength={60}
+              onChange={(e) => setNombre(e.target.value)}
+              className="rounded-lg border border-slate-300 bg-white px-3 py-3 text-base"
+            />
+          </label>
+          {turnstileSiteKey && (
+            <TurnstileWidget siteKey={turnstileSiteKey} onToken={setTokenTurnstile} resetKey={reinicioTurnstile} />
+          )}
           <button
             type="button"
             onClick={seguirDni}
-            disabled={guardando}
+            disabled={
+              guardando || verificacionPendiente || dni.replace(/\D/g, "").length < 7 || formatoCapital(nombre).length < 2
+            }
             className="mt-4 w-full rounded-lg bg-teal-700 px-4 py-3 text-sm font-semibold text-white disabled:opacity-60"
           >
             {guardando ? "Guardando turno…" : "Continuar"}
@@ -471,9 +503,14 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
               className="rounded-lg border border-slate-300 bg-white px-3 py-3 text-base"
             />
           </label>
+          {turnstileSiteKey && (
+            <TurnstileWidget siteKey={turnstileSiteKey} onToken={setTokenTurnstile} resetKey={reinicioTurnstile} />
+          )}
           <button
             type="button"
-            disabled={!nombre.trim() || !apellido.trim() || whatsapp.trim().length < 8 || !nacimiento || guardando}
+            disabled={
+              !nombre.trim() || !apellido.trim() || whatsapp.trim().length < 8 || !nacimiento || guardando || verificacionPendiente
+            }
             onClick={() => void reservar(true)}
             className="mt-4 w-full rounded-lg bg-teal-700 px-4 py-3 text-sm font-semibold text-white disabled:opacity-60"
           >
@@ -492,7 +529,7 @@ export function ReservaPublica({ clinica }: { clinica: ClinicaPublica }) {
           {nuevo && (
             <>
               <p className="text-sm">
-                {nombre.trim()} {apellido.trim()}
+                {formatoCapital(nombre)} {formatoCapital(apellido)}
               </p>
               <p className="text-sm text-slate-600">WhatsApp {whatsapp.trim()}</p>
             </>
