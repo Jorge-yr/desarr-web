@@ -1,5 +1,5 @@
 import { ahoraTimestamp } from "@/lib/turno/ahora";
-import { VENCE_PENDIENTE_HORAS } from "@/lib/turno/reglas";
+import { vencimientoPago } from "@/lib/turno/reglas";
 
 // Mercado Pago pide ISO 8601 con offset. Argentina es UTC-3 todo el año.
 function conOffsetArgentina(fecha: Date) {
@@ -45,7 +45,7 @@ export async function crearPreferencia(input: PreferenciaInput) {
       notification_url: input.notificationUrl,
       expires: true,
       expiration_date_from: conOffsetArgentina(new Date()),
-      expiration_date_to: conOffsetArgentina(new Date(Date.now() + VENCE_PENDIENTE_HORAS * 60 * 60 * 1000)),
+      expiration_date_to: conOffsetArgentina(vencimientoPago()),
     }),
   });
 

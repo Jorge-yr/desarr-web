@@ -9,7 +9,6 @@ import {
   registrarIntento,
   registrarReserva,
   turnosPendientesDeIp,
-  vencerPendientes,
 } from "@/lib/turno/limites";
 import { formatoCapital } from "@/lib/turno/nombre";
 import { filasAOcupados } from "@/lib/turno/ocupados";
@@ -128,7 +127,6 @@ export async function POST(request: Request) {
   }
 
   const cuando = enArgentina(body.inicio);
-  await vencerPendientes(supabase, body.idProfesional);
   const { data: tomados, error: errorTomados } = await supabase
     .from("historial_turnos")
     .select("fecha_hora, estado_turno, duracion_turno, fecha_turno, hora_turno, fecha_hora_turno, finaliza_turno")

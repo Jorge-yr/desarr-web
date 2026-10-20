@@ -1,13 +1,6 @@
 import { createHmac } from "node:crypto";
 import type { createServiceClient } from "@/lib/supabase/service";
-import {
-  ESTADO_PENDIENTE,
-  ESTADO_VENCIDO,
-  VENCE_PENDIENTE_HORAS,
-  VENTANA_INTENTOS_MIN,
-  esPendiente,
-  pendienteVencido,
-} from "@/lib/turno/reglas";
+import { VENCE_PENDIENTE_HORAS, VENTANA_INTENTOS_MIN, esPendiente } from "@/lib/turno/reglas";
 
 type Cliente = NonNullable<ReturnType<typeof createServiceClient>>;
 
@@ -95,25 +88,4 @@ export async function registrarIntento(supabase: Cliente, ipHash: string) {
     .from("turnero_intentos")
     .delete()
     .lt("creado_en", new Date(Date.now() - 2 * 24 * HORA_MS).toISOString());
-}
-
-// Los pendientes de más de 24 horas pasan a Cancelado para que AppSheet los vea libres.
-export async function vencerPendientes(supabase: Cliente, idProfesional: string) {
-  const { data, error } = await supabase
-    .from("historial_turnos")
-    .select("id_turno, estado_turno, fecha_hora")
-    .eq("id_profesional", idProfesional)
-    .eq("estado_turno", ESTADO_PENDIENTE);
-  if (error) return;
-
-  const vencidos = (data ?? [])
-    .filter((turno) => pendienteVencido(turno.estado_turno, turno.fecha_hora))
-    .map((turno) => String(turno.id_turno));
-  if (vencidos.length === 0) return;
-
-  await supabase
-    .from("historial_turnos")
-    .update({ estado_turno: ESTADO_VENCIDO })
-    .in("id_turno", vencidos)
-    .eq("estado_turno", ESTADO_PENDIENTE);
 }

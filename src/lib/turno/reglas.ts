@@ -1,7 +1,7 @@
 export const ESTADO_PENDIENTE = "Pendiente en Turnero Web";
 export const ESTADO_VENCIDO = "Cancelado";
 
-// Un turno web sin seña libera el horario a las 24 horas.
+// El SQL diario a las 0:01 ART cancela pendientes con más de 24 horas.
 export const VENCE_PENDIENTE_HORAS = 24;
 // Turnos pendientes de pago que puede tener una misma conexión.
 export const MAX_TURNOS_PENDIENTES_POR_IP = 5;
@@ -41,4 +41,24 @@ export function pendienteVencido(estado: unknown, fechaHora: unknown, ahora = Da
   const creado = instanteDeRegistro(fechaHora);
   if (creado === null) return false;
   return ahora - creado > VENCE_PENDIENTE_HORAS * 60 * 60 * 1000;
+}
+
+// El link de Mercado Pago vence en la misma 0:01 ART en la que el SQL cancela el turno:
+// 24 horas después de crearlo, y después la primera 0:01.
+export function vencimientoPago(desde = new Date()) {
+  const corte = new Date(desde.getTime() + VENCE_PENDIENTE_HORAS * 60 * 60 * 1000);
+  const ymd = corte.toLocaleDateString("en-CA", { timeZone: "America/Argentina/Buenos_Aires" });
+  const reloj = corte.toLocaleTimeString("en-GB", {
+    timeZone: "America/Argentina/Buenos_Aires",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+  const [hora, minuto] = reloj.split(":").map(Number);
+  let dia = ymd;
+  if (hora > 0 || minuto >= 1) {
+    const [anio, mes, d] = ymd.split("-").map(Number);
+    dia = new Date(Date.UTC(anio, mes - 1, d + 1)).toISOString().slice(0, 10);
+  }
+  return new Date(`${dia}T00:01:00-03:00`);
 }
