@@ -3,6 +3,7 @@ import type { Ocupado } from "@/lib/turno/huecos";
 const ZONA = "America/Argentina/Buenos_Aires";
 
 export type FilaTurno = {
+  fecha_hora?: unknown;
   fecha_turno?: unknown;
   hora_turno?: unknown;
   fecha_hora_turno?: unknown;

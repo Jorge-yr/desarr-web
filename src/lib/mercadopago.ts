@@ -1,3 +1,11 @@
+import { ahoraTimestamp } from "@/lib/turno/ahora";
+import { vencimientoPago } from "@/lib/turno/reglas";
+
+// Mercado Pago pide ISO 8601 con offset. Argentina es UTC-3 todo el año.
+function conOffsetArgentina(fecha: Date) {
+  return `${ahoraTimestamp(fecha).replace(" ", "T")}.000-03:00`;
+}
+
 type PreferenciaInput = {
   accessToken: string;
   titulo: string;
@@ -35,6 +43,9 @@ export async function crearPreferencia(input: PreferenciaInput) {
       },
       auto_return: "approved",
       notification_url: input.notificationUrl,
+      expires: true,
+      expiration_date_from: conOffsetArgentina(new Date()),
+      expiration_date_to: conOffsetArgentina(vencimientoPago()),
     }),
   });
 

@@ -110,7 +110,7 @@ async function turnosOcupados(idProfesional: string, dias: number, duracionDefec
   if (!supabase) return [];
   const { data } = await supabase
     .from("historial_turnos")
-    .select("fecha_turno, hora_turno, fecha_hora_turno, finaliza_turno, duracion_turno, estado_turno")
+    .select("fecha_hora, fecha_turno, hora_turno, fecha_hora_turno, finaliza_turno, duracion_turno, estado_turno")
     .eq("id_profesional", idProfesional);
   return filasAOcupados(data ?? [], duracionDefecto, dias);
 }
