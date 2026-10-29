@@ -64,7 +64,9 @@ export async function persistLead({
   const webhookUrl =
     source === "registro"
       ? process.env.MAKE_REGISTRO_WEBHOOK_URL ?? process.env.MAKE_WEBHOOK_URL
-      : process.env.MAKE_WEBHOOK_URL;
+      : source === "det"
+        ? process.env.DET_WEBHOOK_URL ?? process.env.MAKE_WEBHOOK_URL
+        : process.env.MAKE_WEBHOOK_URL;
 
   if (webhookUrl) {
     try {
